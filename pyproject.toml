@@ -25,6 +25,7 @@ dev = [
     "responses (>=0.25.8,<0.26.0)",
     "pytest-cov (>=6.2.1,<7.0.0)",
     "pytest (>=8.4.1,<9.0.0)",
+    "python-multipart>=0.0.20",
 ]
 
 [tool.ty.src]
