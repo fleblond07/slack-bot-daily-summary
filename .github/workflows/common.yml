@@ -32,7 +32,7 @@ jobs:
       - name: Setup env file
         run: cp .env.example .env
       - name: Run tests
-        run: uv run --extra dev pytest . --cov=src --cov-report term-missing --cov-fail-under=100
+        run: uv run --extra dev pytest --cov-fail-under=100
       - name: Run ruff
         run: uv run --extra dev ruff check
       - name: Run ty
