@@ -1,0 +1,56 @@
+{
+  "display_information": {
+    "name": "Daily Learning"
+  },
+  "features": {
+    "bot_user": {
+      "display_name": "Daily Learning",
+      "always_online": true
+    },
+    "slash_commands": [
+      {
+        "command": "/readme",
+        "url": "https://YOUR_URL/slack/events",
+        "description": "Ask the bot to read something",
+        "usage_hint": "'Name of the book'",
+        "should_escape": false
+      },
+      {
+        "command": "/hello",
+        "url": "https://YOUR_URL/slack/hello",
+        "description": "Returns a simple Hello message to make sure app is working",
+        "should_escape": false
+      },
+      {
+        "command": "/list",
+        "url": "https://YOUR_URL/slack/events",
+        "description": "Gives a list of all current books and scheduled jobs",
+        "should_escape": false
+      },
+      {
+        "command": "/reset",
+        "url": "https://YOUR_URL/slack/reset_schedule",
+        "description": "Reset the current schedule",
+        "usage_hint": "WARNING THIS DELETES EVERYTHING",
+        "should_escape": false
+      }
+    ]
+  },
+  "oauth_config": {
+    "scopes": {
+      "bot": [
+        "channels:manage",
+        "chat:write",
+        "chat:write.public",
+        "commands",
+        "incoming-webhook",
+        "channels:read"
+      ]
+    }
+  },
+  "settings": {
+    "org_deploy_enabled": false,
+    "socket_mode_enabled": false,
+    "token_rotation_enabled": false
+  }
+}
