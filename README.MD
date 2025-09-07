@@ -62,7 +62,7 @@ I’ll review it and merge if it makes sense 👍.
 Here’s what’s next for Daily Learner:
 
 - 🌍 Support for **multiple Slack workspaces**.
-- 💡 New command `/tips <tech>` → receive daily tips about a technology (e.g., Python, Docker, AI).
+- 💡 New command `/tips <tech>` → receive daily tips about a technology (e.g., Python, Docker, AI). -> Currently being developped
 - 🧩 More flexibility in scheduling & content sources.
 
 ---
