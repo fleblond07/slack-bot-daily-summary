@@ -1,6 +1,6 @@
 # 📚 Daily Learner
 
-[![Build](https://img.shields.io/github/actions/workflow/status/fleblond07/slack-bot-daily-summary/ci.yml?branch=main&label=deploy)](https://github.com/fleblond07/slack-bot-daily-summary/actions)
+[![CI](https://github.com/fleblond07/slack-bot-daily-summary/actions/workflows/ci.yml/badge.svg)](https://github.com/fleblond07/slack-bot-daily-summary/actions/workflows/ci.yml)
 [![Slack](https://img.shields.io/badge/Slack-App-blueviolet?logo=slack&logoColor=white)]
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)]
 
