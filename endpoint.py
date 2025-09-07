@@ -78,7 +78,7 @@ async def slack_events(request: Request) -> JSONResponse | None:
     command = form.get("command")
     text = form.get("text")
 
-    if command not in ["/readme", "/list"]:
+    if command not in ["/readme", "/list", "/tips"]:
         logger.warning("Accessing the endpoint with a unavailable command")
         return JSONResponse(
             content={
@@ -113,6 +113,22 @@ async def slack_events(request: Request) -> JSONResponse | None:
     if command == "/list":
         try:
             result = handle_list_command()
+            return JSONResponse(
+                content={
+                    "response_type": "in_channel",
+                    "text": result,
+                }
+            )
+        except Exception as exception:
+            return JSONResponse(
+                content={
+                    "response_type": "in_channel",
+                    "text": f"Oh oh! An error occured - {str(exception)}",
+                }
+            )
+    if command == "/tips":
+        try:
+            result = handle_tips_command()
             return JSONResponse(
                 content={
                     "response_type": "in_channel",
