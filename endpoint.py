@@ -7,7 +7,6 @@ from src.db_helper import load_jobs, reset_jobs
 from src.main import handle_list_command, handle_readme_command
 from src.slack_helper import verify_slack_request
 import logging
-from typing import Union
 
 logger = logging.getLogger("daily_learner")
 
@@ -66,7 +65,7 @@ async def reset_schedule(request: Request) -> JSONResponse:
 
 
 @app.post("/slack/events", response_model=None)
-async def slack_events(request: Request) -> Union[JSONResponse, None]:
+async def slack_events(request: Request) -> JSONResponse | None:
     timestamp = request.headers.get("X-Slack-Request-Timestamp", "")
     slack_signature = request.headers.get("X-Slack-Signature", "")
     body = await request.body()
