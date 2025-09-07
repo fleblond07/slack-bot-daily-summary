@@ -101,6 +101,22 @@ def handle_readme_command(book_name: UploadFile | str | None) -> str:
     return "An error occured while registering the book"
 
 
+def handle_tips_command(technology_name: UploadFile | str | None) -> str:
+    if not isinstance(technology_name, str):
+        raise Exception(f"Invalid technology name type given {type(technology_name)}")
+
+    technology, err = create_technology(technology_name)
+
+    if err:
+        return err
+
+    if technology:
+        schedule_technology(technology)
+        save_jobs()
+        return f"We will give you tips and tricks about {technology.name} everyday on channel <#{technology.channel_id}>"
+    return "An error occured while registering the technology"
+
+
 def handle_list_command() -> str:
     channel_list: list = get_all_channel()
 
