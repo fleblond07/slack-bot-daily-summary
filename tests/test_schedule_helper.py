@@ -16,7 +16,7 @@ class TestScheduleJobs:
         with pytest.raises(Exception, match="Called scheduler without a book"):
             schedule_jobs(None)
 
-    @patch("src.main.send_daily_summary")
+    @patch("src.main.send_daily_book_summary")
     def test_schedules_job_when_book_provided(self, mock_send):
         book = default_book_per_page
         schedule_jobs(book)
