@@ -3,7 +3,7 @@ from starlette.datastructures import UploadFile
 from src.schedule_helper import schedule_jobs
 from src.db_helper import load_book_by_isbn, load_books, save_jobs, write_book_to_db
 from src.ai_helper import get_summary_for_book_by_chapter, get_summary_for_book_by_page
-from src.domain import Book, State, Type, Channel
+from src.domain import Book, State, Technology, Type, Channel
 from src.slack_helper import send_slack_message, get_channel_id
 from src.external_helper import get_book_information, get_book_isbn
 from dotenv import load_dotenv
@@ -12,7 +12,7 @@ import os
 load_dotenv()
 
 
-def send_daily_summary(book: Book) -> None:
+def send_daily_book_summary(book: Book) -> None:
     print(f"Summarizing book {book.title=}")
     summary: str | None = None
     target_page: int = 0
@@ -99,6 +99,21 @@ def handle_readme_command(book_name: UploadFile | str | None) -> str:
         save_jobs()
         return f"{book.title} will be summarized for you everyday a new chapter at 9am on channel <#{book.channel_id}>"
     return "An error occured while registering the book"
+
+
+def create_technology(technology_name: str) -> Technology:
+    technology: Technology | None = load_technology_by_name(name=technology_name)
+
+    if technology:
+        return technology, ""
+
+    technology = Technology(name=technology_name)
+
+    technology.channel_id = get_channel_id(technology.name)
+
+    write_technology_to_db(Technology.to_json(technology))
+
+    return technology, ""
 
 
 def handle_tips_command(technology_name: UploadFile | str | None) -> str:

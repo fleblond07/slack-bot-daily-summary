@@ -11,7 +11,7 @@ from src.main import (
     get_all_channel,
     handle_list_command,
     handle_readme_command,
-    send_daily_summary,
+    send_daily_book_summary,
 )
 from unittest.mock import patch
 import pytest
@@ -56,7 +56,7 @@ class TestSendDailySummary:
             state=State.ON_GOING,
         )
 
-        send_daily_summary(book)
+        send_daily_book_summary(book)
 
         mock_get_summary.assert_called_once_with("My Book", "Author", 1)
         mock_send_slack.assert_any_call("C123", "chapter summary")
@@ -84,7 +84,7 @@ class TestSendDailySummary:
             state=State.ON_GOING,
         )
 
-        send_daily_summary(book)
+        send_daily_book_summary(book)
 
         mock_send_slack.assert_any_call("C123", "last summary")
         final_message = f"This was the final summary for {book.title} - Thank you for using the bot!"
@@ -112,7 +112,7 @@ class TestSendDailySummary:
             state=State.ON_GOING,
         )
 
-        send_daily_summary(book)
+        send_daily_book_summary(book)
 
         mock_get_pages.assert_called_once_with(book)
         mock_get_summary.assert_called_once_with("My Book", "Author", 10, 5)
@@ -142,7 +142,7 @@ class TestSendDailySummary:
             state=State.ON_GOING,
         )
 
-        send_daily_summary(book)
+        send_daily_book_summary(book)
 
         final_message = f"This was the final summary for {book.title} - Thank you for using the bot!"
         mock_send_slack.assert_any_call("C123", "final page summary")
@@ -166,7 +166,7 @@ class TestSendDailySummary:
         )
 
         with pytest.raises(Exception) as exc:
-            send_daily_summary(book)
+            send_daily_book_summary(book)
 
         assert f"An error occured getting the summary for book {book.title}" in str(
             exc.value
