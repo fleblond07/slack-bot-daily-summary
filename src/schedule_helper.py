@@ -1,12 +1,19 @@
 import schedule
 from src.constant import DEFAULT_SCHEDULE_TIME
-from src.domain import Book
+from src.domain import Book, Technology
 
 
-def schedule_jobs(book: Book | None) -> None:
-    from src.main import send_daily_summary
+def schedule_jobs(object: Book | Technology | None) -> None:
+    from src.main import send_daily_book_summary
 
-    if not book:
-        raise Exception("Called scheduler without a book")
+    if not object:
+        raise Exception("Called scheduler without a valid object")
 
-    schedule.every().day.at(DEFAULT_SCHEDULE_TIME).do(send_daily_summary, book)
+    if isinstance(object, Book):
+        schedule.every().day.at(DEFAULT_SCHEDULE_TIME).do(
+            send_daily_book_summary, object
+        )
+    elif isinstance(object, Technology):
+        schedule.every().day.at(DEFAULT_SCHEDULE_TIME).do(
+            send_daily_tech_summary, object
+        )

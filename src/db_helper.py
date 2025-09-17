@@ -1,7 +1,7 @@
 from tinydb import TinyDB, Query
 import os
 from src.schedule_helper import schedule_jobs
-from src.domain import Book
+from src.domain import Book, Technology
 import schedule
 
 db = TinyDB(os.getenv("DB_NAME", "books.json"))
@@ -16,7 +16,7 @@ def load_book_by_isbn(isbn: str) -> Book | None:
     if not isbn:
         raise Exception("Empty isbn given")
 
-    book = db.search(Query().isbn == isbn)
+    book = db.search((Query().isbn == isbn) & (Query().object_type == "book"))
 
     if not book:
         return None
@@ -30,11 +30,28 @@ def write_book_to_db(book: dict) -> None:
     db.upsert(book, Query().isbn == book.get("isbn"))
 
 
+def load_technology_by_name(technology_name: str) -> Technology | None:
+    if not technology_name:
+        raise Exception("Empty technology name given")
+
+    technology = db.search(
+        (Query().name == technology_name) & (Query().object_type == "tech")
+    )
+    if not technology:
+        return None
+
+    return Technology.from_json(technology[0])
+
+
 def load_jobs() -> None:
     jobs = jobs_db.all()
     for element in jobs:
-        if element.get("isbn"):
+        if element.get("object_type") == "book" and element.get("isbn"):
             schedule_jobs(load_book_by_isbn(isbn=element.get("isbn", "")))
+        elif element.get("object_type") == "tech":
+            schedule_jobs(
+                load_technology_by_name(technology_name=elemet.get("name", ""))
+            )
 
 
 def save_jobs() -> None:

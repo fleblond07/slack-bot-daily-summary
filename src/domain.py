@@ -11,6 +11,11 @@ class State(Enum):
     ON_GOING = "on_going"
 
 
+class ObjectType(Enum):
+    BOOK = "book"
+    TECH = "tech"
+
+
 class Type(Enum):
     BY_CHAPTER = "by_chapter"
     BY_PAGE = "by_page"
@@ -50,6 +55,29 @@ class ChannelList:
 
 
 @dataclass
+class Technology:
+    name: str
+    channel_id: str = os.getenv("DEFAULT_SLACK_CHANNEL", "123456")
+    object_type: ObjectType = ObjectType.TECH
+
+    @staticmethod
+    def to_json(technology: "Technology") -> dict:
+        return {
+            "name": technology.name,
+            "channel_id": technology.channel_id,
+            "object_type": "tech",
+        }
+
+    @staticmethod
+    def from_json(technology: dict) -> "Technology":
+        return Technology(
+            name=technology.get("name", ""),
+            channel_id=technology.get("channel_id", ""),
+            object_type=ObjectType.TECH,
+        )
+
+
+@dataclass
 class Book:
     isbn: str
     title: str
@@ -57,6 +85,7 @@ class Book:
     page_count: int
     state: State
     type: Type
+    object_type: ObjectType = ObjectType.BOOK
     chapter_number: int = 0
     current_chapter: int = 0
     current_page: int = 0
@@ -75,6 +104,7 @@ class Book:
             "current_chapter": book.current_chapter,
             "current_page": book.current_page,
             "channel_id": book.channel_id,
+            "object_type": "book",
         }
 
     @staticmethod
@@ -90,4 +120,5 @@ class Book:
             current_chapter=dict.get("current_chapter", 0),
             current_page=dict.get("current_page", 0),
             channel_id=dict.get("channel_id", ""),
+            object_type=ObjectType.BOOK,
         )
