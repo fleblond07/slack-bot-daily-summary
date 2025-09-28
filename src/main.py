@@ -1,8 +1,19 @@
 import schedule
 from starlette.datastructures import UploadFile
 from src.schedule_helper import schedule_jobs
-from src.db_helper import load_book_by_isbn, load_books, save_jobs, write_book_to_db
-from src.ai_helper import get_summary_for_book_by_chapter, get_summary_for_book_by_page
+from src.db_helper import (
+    load_book_by_isbn,
+    load_books,
+    load_technology_by_name,
+    save_jobs,
+    write_book_to_db,
+    write_technology_to_db,
+)
+from src.ai_helper import (
+    get_summary_for_book_by_chapter,
+    get_summary_for_book_by_page,
+    get_summary_for_technology,
+)
 from src.domain import Book, State, Technology, Type, Channel
 from src.slack_helper import send_slack_message, get_channel_id
 from src.external_helper import get_book_information, get_book_isbn
@@ -49,6 +60,19 @@ def send_daily_book_summary(book: Book) -> None:
             message = f"This was the final summary for {book.title} - Thank you for using the bot!"
             send_slack_message(book.channel_id, message)
     write_book_to_db(Book.to_json(book))
+
+
+def send_daily_tech_summary(technology: Technology) -> None:
+    print(f"Tips and tricks for {technology.name=}")
+
+    summary = get_summary_for_technology(technology.name)
+
+    if not summary:
+        raise Exception(
+            f"An error occured getting tips & tricks for tech {technology.name}"
+        )
+
+    send_slack_message(technology.channel_id, summary)
 
 
 def _get_pages_for_summary(book: Book) -> int:
@@ -102,10 +126,12 @@ def handle_readme_command(book_name: UploadFile | str | None) -> str:
 
 
 def create_technology(technology_name: str) -> Technology:
-    technology: Technology | None = load_technology_by_name(name=technology_name)
+    technology: Technology | None = load_technology_by_name(
+        technology_name=technology_name
+    )
 
     if technology:
-        return technology, ""
+        return technology
 
     technology = Technology(name=technology_name)
 
@@ -113,20 +139,17 @@ def create_technology(technology_name: str) -> Technology:
 
     write_technology_to_db(Technology.to_json(technology))
 
-    return technology, ""
+    return technology
 
 
 def handle_tips_command(technology_name: UploadFile | str | None) -> str:
     if not isinstance(technology_name, str):
         raise Exception(f"Invalid technology name type given {type(technology_name)}")
 
-    technology, err = create_technology(technology_name)
-
-    if err:
-        return err
+    technology = create_technology(technology_name)
 
     if technology:
-        schedule_technology(technology)
+        schedule_jobs(technology)
         save_jobs()
         return f"We will give you tips and tricks about {technology.name} everyday on channel <#{technology.channel_id}>"
     return "An error occured while registering the technology"

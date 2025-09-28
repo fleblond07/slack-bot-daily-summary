@@ -4,7 +4,7 @@ from src.domain import Book, Technology
 
 
 def schedule_jobs(object: Book | Technology | None) -> None:
-    from src.main import send_daily_book_summary
+    from src.main import send_daily_book_summary, send_daily_tech_summary
 
     if not object:
         raise Exception("Called scheduler without a valid object")

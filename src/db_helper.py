@@ -30,6 +30,13 @@ def write_book_to_db(book: dict) -> None:
     db.upsert(book, Query().isbn == book.get("isbn"))
 
 
+def write_technology_to_db(technology: dict) -> None:
+    if not technology:
+        raise Exception("Invalid technology given")
+
+    db.upsert(technology, Query().name == technology.get("name"))
+
+
 def load_technology_by_name(technology_name: str) -> Technology | None:
     if not technology_name:
         raise Exception("Empty technology name given")
@@ -50,7 +57,7 @@ def load_jobs() -> None:
             schedule_jobs(load_book_by_isbn(isbn=element.get("isbn", "")))
         elif element.get("object_type") == "tech":
             schedule_jobs(
-                load_technology_by_name(technology_name=elemet.get("name", ""))
+                load_technology_by_name(technology_name=element.get("name", ""))
             )
 
 
