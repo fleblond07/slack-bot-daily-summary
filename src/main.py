@@ -5,7 +5,8 @@ from src.db_helper import (
     load_book_by_isbn,
     load_books,
     load_technology_by_name,
-    save_jobs,
+    save_book_jobs,
+    save_tech_jobs,
     write_book_to_db,
     write_technology_to_db,
 )
@@ -14,7 +15,7 @@ from src.ai_helper import (
     get_summary_for_book_by_page,
     get_summary_for_technology,
 )
-from src.domain import Book, State, Technology, Type, Channel
+from src.domain import Book, ObjectType, State, Technology, Type, Channel
 from src.slack_helper import send_slack_message, get_channel_id
 from src.external_helper import get_book_information, get_book_isbn
 from dotenv import load_dotenv
@@ -120,7 +121,7 @@ def handle_readme_command(book_name: UploadFile | str | None) -> str:
 
     if book:
         schedule_jobs(book)
-        save_jobs()
+        save_book_jobs()
         return f"{book.title} will be summarized for you everyday a new chapter at 9am on channel <#{book.channel_id}>"
     return "An error occured while registering the book"
 
@@ -150,7 +151,7 @@ def handle_tips_command(technology_name: UploadFile | str | None) -> str:
 
     if technology:
         schedule_jobs(technology)
-        save_jobs()
+        save_tech_jobs()
         return f"We will give you tips and tricks about {technology.name} everyday on channel <#{technology.channel_id}>"
     return "An error occured while registering the technology"
 
@@ -169,8 +170,11 @@ def handle_list_command() -> str:
     job_list = []
     for job in schedule.jobs:
         next_run = job.next_run.strftime("%Y-%m-%d %H:%M:%S") if job.next_run else ""
-        book_arg = job.job_func.args[0] if job.job_func else ""
-        title = getattr(book_arg, "title", "Unknown")
+        object_arg = job.job_func.args[0] if job.job_func else ""
+        if getattr(object_arg, "object_type", ObjectType.BOOK) == ObjectType.BOOK:
+            title = getattr(object_arg, "title", "Unknown")
+        else:
+            title = getattr(object_arg, "name", "Unknown")
         job_list.append(f"Next run: {next_run}, Title: {title}")
     return (
         "Channels I created:\n"

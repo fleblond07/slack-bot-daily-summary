@@ -4,6 +4,7 @@ from src.domain import Book, Channel, State, Technology, Type
 from tests.test_utils import (
     default_book_per_page_from_google,
     default_finished_book_per_page_from_google,
+    default_technology,
 )
 from src.main import (
     _get_pages_for_summary,
@@ -321,7 +322,7 @@ class TestHandleTipsCommand:
 
         assert result == "An error occured while registering the technology"
 
-    @patch("src.main.save_jobs")
+    @patch("src.main.save_tech_jobs")
     @patch("src.main.schedule_jobs")
     @patch("src.main.create_technology")
     def test_create_technology_returns_valid_technology(
@@ -353,7 +354,7 @@ class TestHandleReadmeCommand:
         result = handle_readme_command("MyBook")
         assert result == "some error"
 
-    @patch("src.main.save_jobs")
+    @patch("src.main.save_book_jobs")
     @patch("src.main.create_book")
     def test_create_book_returns_valid_book(self, mock_create, mock_schedule):
         book = default_book_per_page_from_google
@@ -403,21 +404,25 @@ class TestHandleListCommand:
     @patch("src.main.get_all_channel")
     def test_channels_with_jobs(self, mock_get_channels):
         mock_get_channels.return_value = [
-            Channel(channel_id="C123", book_name="My Book")
+            Channel(channel_id="C123", book_name="My Book"),
+            Channel(channel_id="123456", book_name="SQLAlchemy"),
         ]
 
         book = default_book_per_page_from_google
+        tech = default_technology
 
         def dummy_job(b):
-            return b.title
+            return b.title or b.name
 
         schedule.every().day.at("07:00").do(dummy_job, book)
+        schedule.every().day.at("07:00").do(dummy_job, tech)
 
         result = handle_list_command()
 
         assert "<#C123>" in result
         assert "Next run:" in result
         assert "Clean Code" in result
+        assert "SQLAlchemy" in result
 
 
 class TestGetAllChannel:

@@ -46,16 +46,16 @@ class TestSendSlackMessage:
 class TestSlackGetChannel:
     def test_get_channel_with_empty_book_name_should_raise_exception(self):
         with pytest.raises(Exception) as exception:
-            get_channel_id(book_name="", client=TestClient())
-        assert str(exception.value) == "Empty book name given"
+            get_channel_id(object_name="", client=TestClient())
+        assert str(exception.value) == "Empty object name given"
 
     def test_get_existing_channel_should_return_correct_id(self):
-        assert get_channel_id(book_name="tata", client=TestClient()) == "123456"
+        assert get_channel_id(object_name="tata", client=TestClient()) == "123456"
 
     def test_get_non_existing_channel_should_create_channel(self):
         with patch("src.slack_helper.create_channel") as mock_create_channel:
             mock_create_channel.return_value = "890123"
-            assert get_channel_id(book_name="Titi", client=TestClient()) == "890123"
+            assert get_channel_id(object_name="Titi", client=TestClient()) == "890123"
 
             mock_create_channel.assert_called_once_with("titi")
 
@@ -66,7 +66,7 @@ class TestSlackGetChannel:
                     message="Something didnt go well",
                     response={"error": "This didnt go well"},
                 )
-                get_channel_id(book_name="123", client=TestClient())
+                get_channel_id(object_name="123", client=TestClient())
 
 
 class TestSlackCreateChannel:
