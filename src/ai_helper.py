@@ -31,6 +31,15 @@ def get_summary_for_book_by_chapter(
     return _send_prompt(prompt=prompt)
 
 
+def get_summary_for_technology(technology_name: str) -> str:
+    if not technology_name:
+        raise Exception(
+            f"Invalid value was given, aborting before send request {technology_name=}"
+        )
+    prompt = f"Please give me a tip or trick for using technology: {technology_name} - This tip or trick should be detailed with code example when necessary, Please refrain from using emojis etc.. use slack-flavored markdown for headers and highlighting the importan words, phrases. Also I want you answer to ONLY CONTAIN THE TIPS OR TRICKS, nothing else no hello or by or question JUST the tip"
+    return _send_prompt(prompt=prompt)
+
+
 def _send_prompt(prompt: str, client: "None | TestClient | Client" = None) -> str:
     client = client or OpenAI()
     if not prompt:

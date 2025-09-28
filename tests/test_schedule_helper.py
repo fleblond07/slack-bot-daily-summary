@@ -13,7 +13,7 @@ class TestScheduleJobs:
         schedule.clear()
 
     def test_raises_exception_if_no_book(self):
-        with pytest.raises(Exception, match="Called scheduler without a book"):
+        with pytest.raises(Exception, match="Called scheduler without a valid object"):
             schedule_jobs(None)
 
     @patch("src.main.send_daily_book_summary")

@@ -20,6 +20,7 @@ Perfect for continuous learning without overwhelming your schedule.
 ### Available Commands
 
 - `/readme <book>` → Register the bot to summarize `<book>` every day.
+- `/tips <technology>` -> Register the bot to give you a tip about a specific technology.
 - `/list` → Show channels + registered summaries.
 - `/reset` → Clear the schedule and start fresh.
 - `/hello` → Quick test to check the bot is working.
@@ -62,7 +63,6 @@ I’ll review it and merge if it makes sense 👍.
 Here’s what’s next for Daily Learner:
 
 - 🌍 Support for **multiple Slack workspaces**.
-- 💡 New command `/tips <tech>` → receive daily tips about a technology (e.g., Python, Docker, AI). -> Currently being developped
 - 🧩 More flexibility in scheduling & content sources.
 
 ---

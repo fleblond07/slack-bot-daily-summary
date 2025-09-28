@@ -83,6 +83,7 @@ class TestLoadJobs:
         self.db.insert(
             {
                 "isbn": "49837410934324",
+                "object_type": "book",
             }
         )
 
