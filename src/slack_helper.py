@@ -45,28 +45,28 @@ def _markdown_to_slackdown(message: str) -> str:
 
 
 def get_channel_id(
-    book_name: str, client: "TestClient | None | WebClient" = None
+    object_name: str, client: "TestClient | None | WebClient" = None
 ) -> str:
     try:
-        if not book_name:
-            raise Exception("Empty book name given")
+        if not object_name:
+            raise Exception("Empty object name given")
 
         client = client or WebClient(token=os.getenv("SLACK_BOT_TOKEN"))
 
         response = client.conversations_list(types="public_channel")
-        sanitized_book_name = _sanitize_book_name(book_name)
+        sanitized_object_name = _sanitize_book_name(object_name)
         for channel in response.get("channels", {}):
-            if channel.get("name") == sanitized_book_name:
+            if channel.get("name") == sanitized_object_name:
                 return channel.get("id", "")
 
-        return create_channel(sanitized_book_name)
+        return create_channel(sanitized_object_name)
     except SlackApiError as e:
         raise Exception(f"Error getting channel's id: {e.response['error']}")
 
 
-def _sanitize_book_name(book_name: str) -> str:
-    book_name = book_name.lower().replace(" ", "-")
-    return book_name.replace("'", "-")
+def _sanitize_book_name(object_name: str) -> str:
+    object_name = object_name.lower().replace(" ", "-")
+    return object_name.replace("'", "-")
 
 
 def create_channel(

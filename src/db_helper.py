@@ -61,12 +61,22 @@ def load_jobs() -> None:
             )
 
 
-def save_jobs() -> None:
+def save_book_jobs() -> None:
     jobs_db.truncate()
     for job in schedule.jobs:
         jobs_db.insert(
             {
                 "isbn": job.job_func.args[0].isbn if job.job_func else None,
+            }
+        )
+
+
+def save_tech_jobs() -> None:
+    jobs_db.truncate()
+    for job in schedule.jobs:
+        jobs_db.insert(
+            {
+                "name": job.job_func.args[0].name if job.job_func else None,
             }
         )
 
