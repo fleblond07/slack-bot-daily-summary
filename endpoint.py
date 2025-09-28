@@ -4,7 +4,7 @@ import schedule
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from src.db_helper import load_jobs, reset_jobs
-from src.main import handle_list_command, handle_readme_command
+from src.main import handle_list_command, handle_readme_command, handle_tips_command
 from src.slack_helper import verify_slack_request
 import logging
 
@@ -128,7 +128,7 @@ async def slack_events(request: Request) -> JSONResponse | None:
             )
     if command == "/tips":
         try:
-            result = handle_tips_command()
+            result = handle_tips_command(technology_name=text)
             return JSONResponse(
                 content={
                     "response_type": "in_channel",

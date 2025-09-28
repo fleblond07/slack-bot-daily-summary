@@ -2,6 +2,7 @@ from src.ai_helper import (
     _send_prompt,
     get_summary_for_book_by_chapter,
     get_summary_for_book_by_page,
+    get_summary_for_technology,
 )
 import pytest
 from unittest.mock import patch
@@ -74,3 +75,24 @@ class TestAiHelper:
             get_summary_for_book_by_page("MyBook", "John", 32, 23)
 
             mock_send_prompt.assert_called_once_with(prompt=expected_prompt)
+
+    def test_get_tips_for_technology_should_call_the_correct_prompt(self):
+        expected_prompt = "Please give me a tip or trick for using technology: SQLAlchemy - This tip or trick should be detailed with code example when necessary, Please refrain from using emojis etc.. use slack-flavored markdown for headers and highlighting the importan words, phrases. Also I want you answer to ONLY CONTAIN THE TIPS OR TRICKS, nothing else no hello or by or question JUST the tip"
+
+        with patch("src.ai_helper._send_prompt") as mock_send_prompt:
+            mock_send_prompt.return_value = "TEST OK"
+
+            get_summary_for_technology("SQLAlchemy")
+
+            mock_send_prompt.assert_called_once_with(prompt=expected_prompt)
+
+    @pytest.mark.parametrize("technology_name", [(""), (None)])
+    def test_get_tip_for_technology_with_invalid_value_should_raise_exception(
+        self, technology_name
+    ):
+        with pytest.raises(Exception) as exception:
+            get_summary_for_technology(technology_name)
+        assert (
+            str(exception.value)
+            == f"Invalid value was given, aborting before send request {technology_name=}"
+        )

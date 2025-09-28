@@ -9,7 +9,7 @@ jobs_db = TinyDB(os.getenv("JOBS_DB_NAME", "jobs.json"))
 
 
 def load_books() -> list[Book]:
-    return [Book.from_json(row) for row in db.all()]
+    return [Book.from_json(row) for row in db.search(Query().object_type == "book")]
 
 
 def load_book_by_isbn(isbn: str) -> Book | None:

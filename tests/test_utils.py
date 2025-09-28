@@ -1,4 +1,4 @@
-from src.domain import Book, State, Type
+from src.domain import Book, ObjectType, State, Technology, Type
 import os
 import responses
 from dotenv import load_dotenv
@@ -99,6 +99,22 @@ default_dict_from_json = {
     "current_chapter": 0,
     "current_page": 0,
     "channel_id": "123456",
+}
+
+default_technology_from_json = {
+    "name": "SQLAlchemy",
+    "object_type": "tech",
+    "channel_id": "123456",
+}
+
+default_technology = Technology(
+    name="SQLAlchemy", channel_id="123456", object_type=ObjectType.TECH
+)
+
+second_technology_from_json = {
+    "name": "Python",
+    "object_type": "tech",
+    "channel_id": "7891011",
 }
 
 second_book_json = {
