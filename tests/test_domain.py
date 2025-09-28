@@ -1,5 +1,10 @@
-from src.domain import Book, Channel, ChannelList, Type
-from tests.test_utils import default_book_per_page, default_dict_from_json
+from src.domain import Book, Channel, ChannelList, Technology, Type
+from tests.test_utils import (
+    default_book_per_page,
+    default_dict_from_json,
+    default_technology_from_json,
+    default_technology,
+)
 
 
 class TestDomainType:
@@ -18,6 +23,16 @@ class TestDomainBook:
     def test_from_json_to_valid_book(self):
         dict = default_dict_from_json
         assert Book.from_json(dict) == default_book_per_page
+
+
+class TestDomainTechnology:
+    def test_to_json_from_valid_technology(self):
+        technology = default_technology
+        assert Technology.to_json(technology) == default_technology_from_json
+
+    def test_from_json_to_valid_technology(self):
+        dict = default_technology_from_json
+        assert Technology.from_json(dict) == default_technology
 
 
 class TestDomainChannel:

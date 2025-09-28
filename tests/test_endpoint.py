@@ -70,27 +70,32 @@ class TestSlackEvents:
             )
         assert response.json()["text"] == "Book found!"
 
-    def test_readme_exception(self):
+    def test_readme_failure(self):
         with (
             patch("endpoint.verify_slack_request", return_value=True),
-            patch("endpoint.handle_readme_command", side_effect=Exception()),
+            patch(
+                "endpoint.handle_readme_command", side_effect=Exception("Error occured")
+            ),
         ):
             response = client.post(
                 "/slack/events",
                 data={"command": "/readme", "text": "Python"},
             )
-        assert "An error occured" in response.json()["text"]
+        assert response.json()["text"] == "Oh oh! An error occured - Error occured"
 
     def test_list_success(self):
         with (
             patch("endpoint.verify_slack_request", return_value=True),
-            patch("endpoint.handle_list_command", return_value="All items"),
+            patch(
+                "endpoint.handle_list_command",
+                return_value="Below the list of channels",
+            ),
         ):
             response = client.post(
                 "/slack/events",
-                data={"command": "/list"},
+                data={"command": "/list", "text": ""},
             )
-        assert response.json()["text"] == "All items"
+        assert response.json()["text"] == "Below the list of channels"
 
     def test_list_exception(self):
         with (
@@ -110,6 +115,30 @@ class TestSlackEvents:
                 data={"command": "/list"},
             )
         assert response.status_code == 403
+
+    def test_tips_success(self):
+        with (
+            patch("endpoint.verify_slack_request", return_value=True),
+            patch("endpoint.handle_tips_command", return_value="Here are some tips!"),
+        ):
+            response = client.post(
+                "/slack/events",
+                data={"command": "/tips", "text": "Python"},
+            )
+        assert response.json()["text"] == "Here are some tips!"
+        assert response.json()["response_type"] == "in_channel"
+
+    def test_tips_exception(self):
+        with (
+            patch("endpoint.verify_slack_request", return_value=True),
+            patch("endpoint.handle_tips_command", side_effect=Exception("Oops")),
+        ):
+            response = client.post(
+                "/slack/events",
+                data={"command": "/tips", "text": "Python"},
+            )
+        assert "Oh oh! An error occured - Oops" in response.json()["text"]
+        assert response.json()["response_type"] == "in_channel"
 
 
 class TestSchedulerLifespan:

@@ -1,6 +1,6 @@
 import schedule
 from dotenv import load_dotenv
-from src.domain import Book, Channel, State, Type
+from src.domain import Book, Channel, State, Technology, Type
 from tests.test_utils import (
     default_book_per_page_from_google,
     default_finished_book_per_page_from_google,
@@ -8,10 +8,13 @@ from tests.test_utils import (
 from src.main import (
     _get_pages_for_summary,
     create_book,
+    create_technology,
     get_all_channel,
     handle_list_command,
     handle_readme_command,
+    handle_tips_command,
     send_daily_book_summary,
+    send_daily_tech_summary,
 )
 from unittest.mock import patch
 import pytest
@@ -172,6 +175,63 @@ class TestSendDailySummary:
             exc.value
         )
 
+    @patch("src.main.send_slack_message")
+    @patch("src.main.get_summary_for_technology")
+    def test_send_daily_tech_summary_success(self, mock_get_summary, mock_send_slack):
+        mock_get_summary.return_value = "Some useful tech tips!"
+        tech = Technology(name="Python", channel_id="C456")
+
+        send_daily_tech_summary(tech)
+
+        mock_get_summary.assert_called_once_with("Python")
+        mock_send_slack.assert_called_once_with("C456", "Some useful tech tips!")
+
+    @patch("src.main.send_slack_message")
+    @patch("src.main.get_summary_for_technology")
+    def test_send_daily_tech_summary_no_summary(
+        self, mock_get_summary, mock_send_slack
+    ):
+        mock_get_summary.return_value = None
+        with pytest.raises(Exception) as excinfo:
+            send_daily_tech_summary(Technology(name="Rust", channel_id="C789"))
+
+        assert "An error occured getting tips & tricks for tech Rust" in str(
+            excinfo.value
+        )
+        mock_get_summary.assert_called_once_with("Rust")
+        mock_send_slack.assert_not_called()
+
+
+class TestCreateTechnology:
+    def setup_method(self):
+        self.existing_tech = Technology(name="Python", channel_id="C123")
+
+    @patch("src.main.load_technology_by_name")
+    def test_technology_already_exists_should_return_it(self, mock_load):
+        mock_load.return_value = self.existing_tech
+
+        tech = create_technology("Python")
+
+        assert tech is self.existing_tech
+        mock_load.assert_called_once_with(technology_name="Python")
+
+    @patch("src.main.write_technology_to_db")
+    @patch("src.main.get_channel_id")
+    @patch("src.main.load_technology_by_name")
+    def test_new_technology_should_be_created(
+        self, mock_load, mock_get_channel_id, mock_write_db
+    ):
+        mock_load.return_value = None
+        mock_get_channel_id.return_value = "C999"
+
+        tech = create_technology("Rust")
+
+        assert isinstance(tech, Technology)
+        assert tech.name == "Rust"
+        assert tech.channel_id == "C999"
+        mock_get_channel_id.assert_called_once_with("Rust")
+        mock_write_db.assert_called_once_with(Technology.to_json(tech))
+
 
 class TestCreateBook:
     def setup_method(self):
@@ -242,6 +302,42 @@ class TestCreateBook:
         mock_write_db.assert_called_once()
         assert self.on_going_book.channel_id == "123456"
         assert msg == ""
+
+
+class TestHandleTipsCommand:
+    def test_invalid_technology_name_type_should_raise(self):
+        with pytest.raises(Exception) as exc:
+            handle_tips_command(None)
+
+        assert "Invalid technology name type given" in str(exc.value)
+
+    @patch("src.main.create_technology")
+    def test_create_technology_returns_none_should_return_error_string(
+        self, mock_create
+    ):
+        mock_create.return_value = None
+
+        result = handle_tips_command("Rust")
+
+        assert result == "An error occured while registering the technology"
+
+    @patch("src.main.save_jobs")
+    @patch("src.main.schedule_jobs")
+    @patch("src.main.create_technology")
+    def test_create_technology_returns_valid_technology(
+        self, mock_create, mock_schedule, mock_save
+    ):
+        tech = Technology(name="Python", channel_id="C123")
+        mock_create.return_value = tech
+
+        result = handle_tips_command("Python")
+
+        mock_schedule.assert_called_once_with(tech)
+        mock_save.assert_called_once()
+        assert (
+            result
+            == f"We will give you tips and tricks about {tech.name} everyday on channel <#{tech.channel_id}>"
+        )
 
 
 class TestHandleReadmeCommand:

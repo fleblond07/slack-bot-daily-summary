@@ -5,12 +5,17 @@ from src.db_helper import (
     load_book_by_isbn,
     load_books,
     load_jobs,
+    load_technology_by_name,
     reset_jobs,
     save_jobs,
     write_book_to_db,
+    write_technology_to_db,
 )
 from tests.test_utils import (
     default_dict_from_json,
+    default_technology,
+    default_technology_from_json,
+    second_technology_from_json,
     second_book_json,
     default_book_per_page,
 )
@@ -51,6 +56,29 @@ class TestLoadBookByISBN:
         assert str(exception.value) == "Empty isbn given"
 
 
+class TestLoadTechnologyByName:
+    def setup_method(self):
+        self.db = TinyDB(os.getenv("DB_NAME", "books.json"))
+        self.db.upsert(
+            default_technology_from_json,
+            Query().name == default_technology_from_json.get("name"),
+        )
+
+    def test_get_specific_technology(self):
+        assert (
+            load_technology_by_name(default_technology_from_json.get("name", ""))
+            == default_technology
+        )
+
+    def test_get_unknown_technology(self):
+        assert load_technology_by_name("unexisting") is None
+
+    def test_get_technology_with_no_name_given(self):
+        with pytest.raises(Exception) as exception:
+            assert load_technology_by_name(technology_name="")
+        assert str(exception.value) == "Empty technology name given"
+
+
 class TestWriteBookToJSON:
     def setup_method(self):
         self.db = TinyDB(os.getenv("DB_NAME", "books.json"))
@@ -76,6 +104,32 @@ class TestWriteBookToJSON:
         assert result[0] == updated_dict
 
 
+class TestWriteTechnologyToJSON:
+    def setup_method(self):
+        self.db = TinyDB(os.getenv("DB_NAME", "books.json"))
+        self.db.upsert(
+            default_technology_from_json,
+            Query().name == default_technology_from_json.get("name"),
+        )
+
+    def test_write_empty_book_to_json_should_raise_exception(self):
+        with pytest.raises(Exception) as exception:
+            write_technology_to_db(technology={})
+        assert str(exception.value) == "Invalid technology given"
+
+    def test_write_valid_book_to_json(self):
+        write_technology_to_db(technology=second_technology_from_json)
+        result = self.db.search(Query().name == second_technology_from_json.get("name"))
+        assert result[0] == second_technology_from_json
+
+    def test_update_valid_book_to_json(self):
+        updated_dict = default_technology_from_json.copy()
+        updated_dict["name"] = "Go"
+        write_technology_to_db(technology=updated_dict)
+        result = self.db.search(Query().name == updated_dict.get("name"))
+        assert result[0] == updated_dict
+
+
 class TestLoadJobs:
     def setup_method(self):
         self.db = TinyDB(os.getenv("JOBS_DB_NAME", "test.json"))
@@ -84,16 +138,22 @@ class TestLoadJobs:
             {
                 "isbn": "49837410934324",
                 "object_type": "book",
-            }
+            },
+        )
+        self.db.insert(
+            {"name": "SQLAlchemy", "object_type": "tech"},
         )
 
     def test_loads_jobs_into_schedule(self):
         schedule.clear()
         load_jobs()
 
-        assert len(schedule.jobs) == 1
-        job = schedule.jobs[0]
-        assert job.job_func.__name__ == "send_daily_book_summary"
+        assert len(schedule.jobs) == 2
+        for job in schedule.jobs:
+            assert job.job_func.__name__ in [
+                "send_daily_book_summary",
+                "send_daily_tech_summary",
+            ]
 
 
 class TestSaveJobs:
