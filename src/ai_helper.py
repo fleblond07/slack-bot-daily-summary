@@ -37,7 +37,7 @@ def get_summary_for_technology(technology_name: str) -> str:
         raise Exception(
             f"Invalid value was given, aborting before send request {technology_name=}"
         )
-    logging.info(f"Getting summary for {technology_name}")
+    logging.warning(f"Getting summary for {technology_name}")
     prompt = f"Please give me a tip or trick for using technology: {technology_name} - This tip or trick should be detailed with code example when necessary, Please refrain from using emojis etc.. use slack-flavored markdown for headers and highlighting the importan words, phrases. Also I want you answer to ONLY CONTAIN THE TIPS OR TRICKS, nothing else no hello or by or question JUST the tip"
     return _send_prompt(prompt=prompt)
 

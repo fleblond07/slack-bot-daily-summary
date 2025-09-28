@@ -7,8 +7,7 @@ from src.db_helper import (
     load_jobs,
     load_technology_by_name,
     reset_jobs,
-    save_book_jobs,
-    save_tech_jobs,
+    save_jobs,
     write_book_to_db,
     write_technology_to_db,
 )
@@ -168,7 +167,7 @@ class TestSaveJobs:
         schedule.clear()
         schedule.every(1).seconds.do(send_daily_book_summary, default_book_per_page)
 
-        save_book_jobs()
+        save_jobs()
         jobs = self.db.all()
         inserted_job = jobs[0]
         assert inserted_job["isbn"] == default_book_per_page.isbn
@@ -177,7 +176,7 @@ class TestSaveJobs:
         schedule.clear()
         schedule.every(1).seconds.do(send_daily_tech_summary, default_technology)
 
-        save_tech_jobs()
+        save_jobs()
         jobs = self.db.all()
         inserted_job = jobs[0]
         assert inserted_job["name"] == default_technology.name

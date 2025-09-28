@@ -5,8 +5,7 @@ from src.db_helper import (
     load_book_by_isbn,
     load_books,
     load_technology_by_name,
-    save_book_jobs,
-    save_tech_jobs,
+    save_jobs,
     write_book_to_db,
     write_technology_to_db,
 )
@@ -65,7 +64,7 @@ def send_daily_book_summary(book: Book) -> None:
 
 
 def send_daily_tech_summary(technology: Technology) -> None:
-    logging.info(f"Tips and tricks for {technology.name=}")
+    logging.warning(f"Tips and tricks for {technology.name=}")
 
     summary = get_summary_for_technology(technology.name)
 
@@ -73,7 +72,7 @@ def send_daily_tech_summary(technology: Technology) -> None:
         raise Exception(
             f"An error occured getting tips & tricks for tech {technology.name}"
         )
-    logging.info("Sending summary...")
+    logging.warning("Sending summary...")
     send_slack_message(technology.channel_id, summary)
 
 
@@ -122,7 +121,7 @@ def handle_readme_command(book_name: UploadFile | str | None) -> str:
 
     if book:
         schedule_jobs(book)
-        save_book_jobs()
+        save_jobs()
         return f"{book.title} will be summarized for you everyday a new chapter at 9am on channel <#{book.channel_id}>"
     return "An error occured while registering the book"
 
@@ -145,17 +144,17 @@ def create_technology(technology_name: str) -> Technology:
 
 
 def handle_tips_command(technology_name: UploadFile | str | None) -> str:
-    logging.info("Handling tips command..")
+    logging.warning("Handling tips command..")
     if not isinstance(technology_name, str):
         raise Exception(f"Invalid technology name type given {type(technology_name)}")
 
     technology = create_technology(technology_name)
 
     if technology:
-        logging.info(f"Created Technology {technology.name}")
+        logging.warning(f"Created Technology {technology.name}")
         schedule_jobs(technology)
-        logging.info("Saving job information")
-        save_tech_jobs()
+        logging.warning("Saving job information")
+        save_jobs()
         return f"We will give you tips and tricks about {technology.name} everyday on channel <#{technology.channel_id}>"
     return "An error occured while registering the technology"
 

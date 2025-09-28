@@ -12,10 +12,10 @@ logger = logging.getLogger("daily_learner")
 
 
 async def scheduler_loop():
-    logger.info("Loading jobs...")
+    logger.warning("Loading jobs...")
     load_jobs()
     while True:
-        logger.info("Checking pending...")
+        logger.warning("Checking pending...")
         schedule.run_pending()
         await asyncio.sleep(60)
 
@@ -136,6 +136,7 @@ async def slack_events(request: Request) -> JSONResponse | None:
                 }
             )
         except Exception as exception:
+            logging.warning(exception)
             return JSONResponse(
                 content={
                     "response_type": "in_channel",

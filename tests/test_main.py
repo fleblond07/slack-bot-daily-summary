@@ -322,7 +322,7 @@ class TestHandleTipsCommand:
 
         assert result == "An error occured while registering the technology"
 
-    @patch("src.main.save_tech_jobs")
+    @patch("src.main.save_jobs")
     @patch("src.main.schedule_jobs")
     @patch("src.main.create_technology")
     def test_create_technology_returns_valid_technology(
@@ -354,7 +354,7 @@ class TestHandleReadmeCommand:
         result = handle_readme_command("MyBook")
         assert result == "some error"
 
-    @patch("src.main.save_book_jobs")
+    @patch("src.main.save_jobs")
     @patch("src.main.create_book")
     def test_create_book_returns_valid_book(self, mock_create, mock_schedule):
         book = default_book_per_page_from_google
