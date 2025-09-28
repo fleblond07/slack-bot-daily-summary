@@ -20,6 +20,7 @@ from src.slack_helper import send_slack_message, get_channel_id
 from src.external_helper import get_book_information, get_book_isbn
 from dotenv import load_dotenv
 import os
+import logging
 
 load_dotenv()
 
@@ -144,6 +145,7 @@ def create_technology(technology_name: str) -> Technology:
 
 
 def handle_tips_command(technology_name: UploadFile | str | None) -> str:
+    logging.info("Handling tips command..")
     if not isinstance(technology_name, str):
         raise Exception(f"Invalid technology name type given {type(technology_name)}")
 
