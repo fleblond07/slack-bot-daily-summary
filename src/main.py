@@ -65,7 +65,7 @@ def send_daily_book_summary(book: Book) -> None:
 
 
 def send_daily_tech_summary(technology: Technology) -> None:
-    print(f"Tips and tricks for {technology.name=}")
+    logging.info(f"Tips and tricks for {technology.name=}")
 
     summary = get_summary_for_technology(technology.name)
 
@@ -73,7 +73,7 @@ def send_daily_tech_summary(technology: Technology) -> None:
         raise Exception(
             f"An error occured getting tips & tricks for tech {technology.name}"
         )
-
+    logging.info("Sending summary...")
     send_slack_message(technology.channel_id, summary)
 
 
@@ -152,7 +152,9 @@ def handle_tips_command(technology_name: UploadFile | str | None) -> str:
     technology = create_technology(technology_name)
 
     if technology:
+        logging.info(f"Created Technology {technology.name}")
         schedule_jobs(technology)
+        logging.info("Saving job information")
         save_tech_jobs()
         return f"We will give you tips and tricks about {technology.name} everyday on channel <#{technology.channel_id}>"
     return "An error occured while registering the technology"
