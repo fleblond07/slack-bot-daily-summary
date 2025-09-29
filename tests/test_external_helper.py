@@ -53,14 +53,14 @@ class TestGetBookInformation:
         google_get_responses_with_no_items()
         with pytest.raises(Exception) as exception:
             get_book_information("123456")
-        assert str(exception.value) == "Couldnt find book with isbn: 123456"
+        assert str(exception.value) == "Couldnt find book with isbn='123456'"
 
     @responses.activate
     def test_books_with_bad_status_code_should_raise_exception(self):
         google_get_responses_with_bad_status_code()
         with pytest.raises(Exception) as exception:
             get_book_information("1234567")
-        assert str(exception.value) == "Couldnt find book with isbn: 1234567"
+        assert str(exception.value) == "Couldnt find book with isbn='1234567'"
 
     @responses.activate
     def test_good_response_should_return_book(self):

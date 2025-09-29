@@ -427,8 +427,10 @@ class TestHandleListCommand:
 
 class TestGetAllChannel:
     @patch("src.main.load_books")
-    def test_no_books_should_return_empty_list(self, mock_load_books):
+    @patch("src.main.load_technologies")
+    def test_no_books_should_return_empty_list(self, mock_load_techs, mock_load_books):
         mock_load_books.return_value = []
+        mock_load_techs.return_value = []
 
         result = get_all_channel()
         assert result == []
