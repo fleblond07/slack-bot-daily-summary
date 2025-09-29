@@ -389,8 +389,8 @@ class TestHandleListCommand:
     def test_channels_no_jobs(self, mock_get_channels):
         schedule.clear()
         mock_get_channels.return_value = [
-            Channel(channel_id="C123", book_name="My Book"),
-            Channel(channel_id="C456", book_name="Clean Code"),
+            Channel(channel_id="C123", name="My Book"),
+            Channel(channel_id="C456", name="Clean Code"),
         ]
 
         result = handle_list_command()
@@ -404,8 +404,8 @@ class TestHandleListCommand:
     @patch("src.main.get_all_channel")
     def test_channels_with_jobs(self, mock_get_channels):
         mock_get_channels.return_value = [
-            Channel(channel_id="C123", book_name="My Book"),
-            Channel(channel_id="123456", book_name="SQLAlchemy"),
+            Channel(channel_id="C123", name="My Book"),
+            Channel(channel_id="123456", name="SQLAlchemy"),
         ]
 
         book = default_book_per_page_from_google
@@ -446,8 +446,8 @@ class TestGetAllChannel:
 
         assert isinstance(result[0], Channel)
         assert result[0].channel_id == "123456"
-        assert result[0].book_name == "Clean Code"
+        assert result[0].name == "Clean Code"
 
         assert isinstance(result[1], Channel)
         assert result[1].channel_id == "7891011"
-        assert result[1].book_name == "The Clean Coder"
+        assert result[1].name == "The Clean Coder"

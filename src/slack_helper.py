@@ -93,19 +93,19 @@ def _sanitize_book_name(object_name: str) -> str:
 
 
 def create_channel(
-    book_name: str, client: "TestClient | WebClient | None" = None
+    object_name: str, client: "TestClient | WebClient | None" = None
 ) -> str:
     try:
-        if not book_name:
-            raise Exception("Empty book name given")
+        if not object_name:
+            raise Exception("Empty object name given")
 
-        logger.info(f"Creating channel for {book_name=}")
+        logger.info(f"Creating channel for {object_name=}")
 
         client = client or WebClient(token=os.getenv("SLACK_BOT_TOKEN"))
 
-        channel = client.conversations_create(name=book_name)
+        channel = client.conversations_create(name=object_name)
 
-        logger.info(f"Channel for {book_name=} created succesfully, sending back ID")
+        logger.info(f"Channel for {object_name=} created succesfully, sending back ID")
 
         return channel.get("channel", {}).get("id", "")
     except SlackApiError as e:

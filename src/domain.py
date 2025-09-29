@@ -30,7 +30,7 @@ class Type(Enum):
 @dataclass
 class Channel:
     channel_id: str | None
-    book_name: str | None
+    name: str | None
 
 
 @dataclass
@@ -41,7 +41,7 @@ class ChannelList:
     def from_domain(channel_list: list[Channel]) -> "ChannelList":
         return ChannelList(
             data=[
-                Channel(channel_id=channel.channel_id, book_name=channel.book_name)
+                Channel(channel_id=channel.channel_id, name=channel.name)
                 for channel in channel_list
             ],
         )
@@ -49,7 +49,7 @@ class ChannelList:
     @staticmethod
     def to_string(channels: "ChannelList") -> str:
         channel_list = "".join(
-            [f"({book.book_name})[#{book.channel_id}]\n" for book in channels.data]
+            [f"({book.name})[#{book.channel_id}]\n" for book in channels.data]
         )
         return f"List of channels: {channel_list}"
 
