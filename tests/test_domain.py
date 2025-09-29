@@ -45,7 +45,7 @@ class TestDomainChannel:
 
         self.default_channel_list = ChannelList(
             data=[
-                Channel(channel_id=book.get("channel_id"), book_name=book.get("name"))
+                Channel(channel_id=book.get("channel_id"), name=book.get("name"))
                 for book in self.books
             ],
         )
@@ -54,8 +54,8 @@ class TestDomainChannel:
         assert (
             ChannelList.from_domain(
                 channel_list=[
-                    Channel(channel_id="12345", book_name="Toto"),
-                    Channel(channel_id="67891", book_name="Tata"),
+                    Channel(channel_id="12345", name="Toto"),
+                    Channel(channel_id="67891", name="Tata"),
                 ]
             )
             == self.default_channel_list

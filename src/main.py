@@ -261,9 +261,6 @@ def get_all_channel() -> list[Channel]:
 
     technologies = load_technologies()
 
-    return [
-        Channel(channel_id=book.channel_id, book_name=book.title) for book in books
-    ] + [
-        Channel(channel_id=tech.channel_id, book_name=tech.name)
-        for tech in technologies
+    return [Channel(channel_id=book.channel_id, name=book.title) for book in books] + [
+        Channel(channel_id=tech.channel_id, name=tech.name) for tech in technologies
     ]
