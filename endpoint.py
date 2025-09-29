@@ -7,9 +7,14 @@ from fastapi.responses import JSONResponse
 from src.db_helper import load_jobs, reset_jobs
 from src.main import handle_list_command, handle_readme_command, handle_tips_command
 from src.slack_helper import verify_slack_request
+import os
 import logging
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logger = logging.getLogger("daily_learner")
+debug_mode = os.getenv("DEBUG_MODE", "false") == "true"
 
 
 async def scheduler_loop():
@@ -41,7 +46,7 @@ async def slack_hello(request: Request) -> JSONResponse:
     slack_signature = request.headers.get("X-Slack-Signature", "")
     body = await request.body()
 
-    if not verify_slack_request(timestamp, slack_signature, body):
+    if not verify_slack_request(timestamp, slack_signature, body) and not debug_mode:
         logger.warning("Accessing the endpoint without the proper authorization")
         return JSONResponse(status_code=403, content={"error": "Unsupported command"})
     logger.info("Succesful Hello, sending back response")
@@ -54,7 +59,7 @@ async def reset_schedule(request: Request) -> JSONResponse:
     slack_signature = request.headers.get("X-Slack-Signature", "")
     body = await request.body()
 
-    if not verify_slack_request(timestamp, slack_signature, body):
+    if not verify_slack_request(timestamp, slack_signature, body) and not debug_mode:
         logger.warning("Accessing the endpoint without the proper authorization")
         return JSONResponse(status_code=403, content={"error": "Unsupported command"})
 
@@ -75,7 +80,7 @@ async def slack_events(request: Request) -> JSONResponse | None:
     slack_signature = request.headers.get("X-Slack-Signature", "")
     body = await request.body()
 
-    if not verify_slack_request(timestamp, slack_signature, body):
+    if not verify_slack_request(timestamp, slack_signature, body) and not debug_mode:
         logger.warning("Accessing the endpoint without the proper authorization")
         return JSONResponse(status_code=403, content={"error": "Unsupported command"})
 
