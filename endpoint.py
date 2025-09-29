@@ -1,3 +1,4 @@
+import traceback
 import asyncio
 from contextlib import asynccontextmanager
 import schedule
@@ -12,10 +13,10 @@ logger = logging.getLogger("daily_learner")
 
 
 async def scheduler_loop():
-    logger.warning("Loading jobs...")
+    logger.info("Loading jobs...")
     load_jobs()
     while True:
-        logger.warning("Checking pending...")
+        logger.info("Checking pending...")
         schedule.run_pending()
         await asyncio.sleep(60)
 
@@ -43,7 +44,7 @@ async def slack_hello(request: Request) -> JSONResponse:
     if not verify_slack_request(timestamp, slack_signature, body):
         logger.warning("Accessing the endpoint without the proper authorization")
         return JSONResponse(status_code=403, content={"error": "Unsupported command"})
-
+    logger.info("Succesful Hello, sending back response")
     return JSONResponse(content={"response_type": "in_channel", "text": "Hello!"})
 
 
@@ -57,7 +58,11 @@ async def reset_schedule(request: Request) -> JSONResponse:
         logger.warning("Accessing the endpoint without the proper authorization")
         return JSONResponse(status_code=403, content={"error": "Unsupported command"})
 
+    logger.info("Reseting jobs...")
+
     reset_jobs()
+
+    logger.info("Job reseted succesfully")
 
     return JSONResponse(
         content={"response_type": "in_channel", "text": "Succesful reset!"}
@@ -74,9 +79,13 @@ async def slack_events(request: Request) -> JSONResponse | None:
         logger.warning("Accessing the endpoint without the proper authorization")
         return JSONResponse(status_code=403, content={"error": "Unsupported command"})
 
+    logger.info("Processing slack/events..")
+
     form = await request.form()
     command = form.get("command")
     text = form.get("text")
+
+    logger.info(f"Checking command for {command=} and {text=}")
 
     if command not in ["/readme", "/list", "/tips"]:
         logger.warning("Accessing the endpoint with a unavailable command")
@@ -88,7 +97,9 @@ async def slack_events(request: Request) -> JSONResponse | None:
         )
 
     if command == "/readme":
+        logger.info("Processing readme command")
         if not text:
+            logger.warning("Invalid text given for readme command")
             return JSONResponse(
                 content={
                     "response_type": "in_channel",
@@ -96,7 +107,12 @@ async def slack_events(request: Request) -> JSONResponse | None:
                 }
             )
         try:
+            logger.info("Handling readme command..")
+
             result = handle_readme_command(text)
+
+            logger.info("Handling readme succesful, sending response..")
+
             return JSONResponse(
                 content={
                     "response_type": "in_channel",
@@ -104,6 +120,9 @@ async def slack_events(request: Request) -> JSONResponse | None:
                 }
             )
         except Exception as exception:
+            logger.warning(
+                f"An error occured when processing readme: {traceback.format_exc()}"
+            )
             return JSONResponse(
                 content={
                     "response_type": "in_channel",
@@ -112,7 +131,12 @@ async def slack_events(request: Request) -> JSONResponse | None:
             )
     if command == "/list":
         try:
+            logger.info("Handle list command")
+
             result = handle_list_command()
+
+            logger.info("List command succesful, sending response...")
+
             return JSONResponse(
                 content={
                     "response_type": "in_channel",
@@ -120,6 +144,9 @@ async def slack_events(request: Request) -> JSONResponse | None:
                 }
             )
         except Exception as exception:
+            logger.warning(
+                f"An error occured when processing list: {traceback.format_exc()}"
+            )
             return JSONResponse(
                 content={
                     "response_type": "in_channel",
@@ -128,7 +155,12 @@ async def slack_events(request: Request) -> JSONResponse | None:
             )
     if command == "/tips":
         try:
+            logger.info("Handle tips command")
+
             result = handle_tips_command(technology_name=text)
+
+            logger.info("Tips command succesful, sending response...")
+
             return JSONResponse(
                 content={
                     "response_type": "in_channel",
@@ -136,7 +168,9 @@ async def slack_events(request: Request) -> JSONResponse | None:
                 }
             )
         except Exception as exception:
-            logging.warning(exception)
+            logger.warning(
+                f"An error occured when processing list: {traceback.format_exc()}"
+            )
             return JSONResponse(
                 content={
                     "response_type": "in_channel",
