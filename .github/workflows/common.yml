@@ -18,7 +18,7 @@ jobs:
       - name: Run git-secrets scan
         run: |
           git secrets --scan
-  tests:
+  code-validation:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
@@ -37,12 +37,6 @@ jobs:
         run: uv run --extra dev ruff check
       - name: Run ty
         run: uv run --extra dev ty check
-  sonarqube:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v6.0.0
         with:
