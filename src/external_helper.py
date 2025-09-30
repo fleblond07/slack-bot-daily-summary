@@ -67,8 +67,8 @@ def _extract_isbn(volume_info: dict[str, list[dict]]) -> str:
 def _load_book_from_google(json: dict) -> Book:
     logger.info("Loading book from google response")
 
-    if (totalItems := json.get("totalItems", 0)) > 1:
-        raise Exception(f"Multiple items found for the same ISBN - {totalItems}")
+    if (total_items := json.get("totalItems", 0)) > 1:
+        raise Exception(f"Multiple items found for the same ISBN - {total_items}")
 
     book_information = json.get("items", {})[0].get("volumeInfo")
 
