@@ -38,7 +38,9 @@ jobs:
       - name: Run ty
         run: uv run --extra dev ty check
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v6.0.0
+        uses: SonarSource/sonarcloud-github-action@v2
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
             -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
@@ -46,5 +48,3 @@ jobs:
             -Dsonar.sources=src/
             -Dsonar.tests=tests/
             -Dsonar.python.coverage.reportPaths=coverage.xml
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
