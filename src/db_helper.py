@@ -77,14 +77,12 @@ def load_jobs() -> None:
     logger.info("Loading jobs from database")
     jobs = jobs_db.all()
     for element in jobs:
-        if element.get("object_type") == "book" and element.get("isbn"):
+        if isbn := element.get("isbn", None):
             logger.info("Scheduling book job")
-            schedule_jobs(load_book_by_isbn(isbn=element.get("isbn", "")))
-        elif element.get("object_type") == "tech":
+            schedule_jobs(load_book_by_isbn(isbn=isbn))
+        elif name := element.get("name", None):
             logger.info("Scheduling tech job")
-            schedule_jobs(
-                load_technology_by_name(technology_name=element.get("name", ""))
-            )
+            schedule_jobs(load_technology_by_name(technology_name=name))
 
 
 def save_jobs() -> None:
