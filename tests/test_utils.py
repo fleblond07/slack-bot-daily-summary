@@ -65,6 +65,18 @@ default_book_per_page_from_google = Book(
     channel_id="123456",
 )
 
+default_book_for_integration = Book(
+    isbn="12345678",
+    title="Johnny McEngineer",
+    author="ThisDude",
+    state=State.ON_GOING,
+    type=Type.BY_PAGE,
+    page_count=123,
+    channel_id="1234567",
+)
+
+default_tech_for_integation = Technology(name="VueJS", channel_id="1234567")
+
 default_finished_book_per_page_from_google = Book(
     isbn="9780140328721",
     title="The Clean Coder",
