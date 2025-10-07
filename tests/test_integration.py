@@ -1,7 +1,6 @@
-import datetime
+from datetime import datetime
 from fastapi.testclient import TestClient
 from unittest.mock import patch
-from datetime import datetime
 import os
 from tinydb import TinyDB
 from src.constant import DEFAULT_SCHEDULE_TIME
