@@ -6,7 +6,7 @@ authors = [
     {name = "JohnSmith",email = "me@flavienleblond.com"}
 ]
 readme = "README.md"
-requires-python="==3.13.7"
+requires-python="==3.14.0"
 dependencies = [
     "slack-sdk==3.37.0",
     "schedule==1.2.2",

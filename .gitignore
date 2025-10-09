@@ -4,6 +4,9 @@ __pycache__
 .coverage
 data/*
 prod.json
+<<<<<<< HEAD
 test_jobs.json
 test_books.json
+=======
+>>>>>>> a083079 (Temporary commit until PyO3 sends an update)
 .python-version
