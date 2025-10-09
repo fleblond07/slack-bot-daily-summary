@@ -4,3 +4,5 @@ __pycache__
 .coverage
 data/*
 prod.json
+test-jobs.json
+test-books.json
