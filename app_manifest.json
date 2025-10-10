@@ -40,6 +40,13 @@
         "description": "Every day get tips and tricks for your favorite technologies !",
         "usage_hint": "/tips <Technology's name>",
         "should_escape": false
+      },
+      {
+        "command": "/run",
+        "url": "https://<YOUR_URL>/",
+        "description": "If you can't wait for tomorrow you can always force the jobs to run",
+        "usage_hint": "/run",
+        "should_escape": false
       }
     ]
   },

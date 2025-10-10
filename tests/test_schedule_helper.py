@@ -1,10 +1,10 @@
 import schedule
 import pytest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from datetime import datetime
 from src.constant import DEFAULT_SCHEDULE_TIME
-from src.schedule_helper import schedule_jobs
+from src.schedule_helper import schedule_jobs, run_all_jobs
 from tests.test_utils import default_book_per_page
 
 
@@ -28,3 +28,20 @@ class TestScheduleJobs:
             getattr(job, "at_time", None)
             == datetime.strptime(DEFAULT_SCHEDULE_TIME, "%H:%M").time()
         )
+
+
+class TestRunJobs:
+    @patch("src.schedule_helper.threading.Thread")
+    @patch("src.schedule_helper.schedule.run_all")
+    def test_run_all_jobs_starts_thread(
+        self, mock_run_all: MagicMock, mock_thread_class: MagicMock
+    ):
+        mock_thread_instance = MagicMock()
+        mock_thread_class.return_value = mock_thread_instance
+
+        run_all_jobs()
+
+        mock_thread_class.assert_called_once_with(
+            name="Run all scheduled jobs", target=mock_run_all
+        )
+        mock_thread_instance.start.assert_called_once()

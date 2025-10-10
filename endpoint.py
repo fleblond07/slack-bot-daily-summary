@@ -5,7 +5,12 @@ import schedule
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from src.db_helper import load_jobs, reset_jobs
-from src.main import handle_list_command, handle_readme_command, handle_tips_command
+from src.main import (
+    handle_list_command,
+    handle_readme_command,
+    handle_tips_command,
+    handle_run_command,
+)
 from src.slack_helper import verify_slack_request
 import os
 import logging
@@ -92,7 +97,7 @@ async def slack_events(request: Request) -> JSONResponse | None:
 
     logger.info(f"Checking command for {command=} and {text=}")
 
-    if command not in ["/readme", "/list", "/tips"]:
+    if command not in ["/readme", "/list", "/tips", "/run"]:
         logger.warning("Accessing the endpoint with a unavailable command")
         return JSONResponse(
             content={
@@ -175,6 +180,30 @@ async def slack_events(request: Request) -> JSONResponse | None:
         except Exception as exception:
             logger.warning(
                 f"An error occured when processing list: {traceback.format_exc()}"
+            )
+            return JSONResponse(
+                content={
+                    "response_type": "in_channel",
+                    "text": f"Oh oh! An error occured - {str(exception)}",
+                }
+            )
+    if command == "/run":
+        try:
+            logger.info("Handle run command")
+
+            result = handle_run_command()
+
+            logger.info("Run command succesful, sending response...")
+
+            return JSONResponse(
+                content={
+                    "response_type": "in_channel",
+                    "text": result,
+                }
+            )
+        except Exception as exception:
+            logger.warning(
+                f"An error occured when processing run command: {traceback.format_exc()}"
             )
             return JSONResponse(
                 content={
