@@ -6,3 +6,4 @@ data/*
 prod.json
 test_jobs.json
 test_books.json
+.python-version
