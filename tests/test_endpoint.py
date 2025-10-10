@@ -140,6 +140,40 @@ class TestSlackEvents:
         assert "Oh oh! An error occured - Oops" in response.json()["text"]
         assert response.json()["response_type"] == "in_channel"
 
+    def test_run_success(self):
+        with (
+            patch("endpoint.verify_slack_request", return_value=True),
+            patch(
+                "endpoint.handle_run_command",
+                return_value="Jobs executed successfully!",
+            ),
+        ):
+            response = client.post(
+                "/slack/events",
+                data={"command": "/run"},
+            )
+        assert response.status_code == 200
+        json_data: dict[str, str] = response.json()
+        assert json_data["response_type"] == "in_channel"
+        assert json_data["text"] == "Jobs executed successfully!"
+
+    def test_run_failure(self):
+        with (
+            patch("endpoint.verify_slack_request", return_value=True),
+            patch(
+                "endpoint.handle_run_command",
+                side_effect=Exception("Something went wrong"),
+            ),
+        ):
+            response = client.post(
+                "/slack/events",
+                data={"command": "/run"},
+            )
+        assert response.status_code == 200
+        json_data: dict[str, str] = response.json()
+        assert json_data["response_type"] == "in_channel"
+        assert json_data["text"] == "Oh oh! An error occured - Something went wrong"
+
 
 class TestSchedulerLifespan:
     def test_scheduler_loop_started_and_cancelled_on_shutdown(self):

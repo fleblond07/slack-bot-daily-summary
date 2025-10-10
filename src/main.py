@@ -1,6 +1,6 @@
 import schedule
 from starlette.datastructures import UploadFile
-from src.schedule_helper import schedule_jobs
+from src.schedule_helper import schedule_jobs, run_all_jobs
 from src.db_helper import (
     load_book_by_isbn,
     load_books,
@@ -143,6 +143,16 @@ def create_book(book_name: str) -> tuple[Book | None, str]:
     write_book_to_db(Book.to_json(book_information))
 
     return book_information, ""
+
+
+def handle_run_command() -> str:
+    logger.info("Handling run command")
+
+    run_all_jobs()
+
+    logger.info("Running all jobs..")
+
+    return "I have succesfully started all scheduled jobs"
 
 
 def handle_readme_command(book_name: UploadFile | str | None) -> str:

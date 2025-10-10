@@ -2,6 +2,7 @@ import schedule
 from src.constant import DEFAULT_SCHEDULE_TIME
 from src.domain import Book, Technology
 import logging
+import threading
 
 logger = logging.getLogger("daily_learner")
 
@@ -24,3 +25,13 @@ def schedule_jobs(object: Book | Technology | None) -> None:
         schedule.every().day.at(DEFAULT_SCHEDULE_TIME).do(
             send_daily_tech_summary, object
         )
+
+
+def run_all_jobs() -> None:
+    logger.info("Run all jobs..")
+
+    thread = threading.Thread(name="Run all scheduled jobs", target=schedule.run_all)
+
+    logger.info("Started thread for jobs...")
+
+    thread.start()

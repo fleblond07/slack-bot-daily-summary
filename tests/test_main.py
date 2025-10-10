@@ -1,3 +1,4 @@
+from unittest.mock import MagicMock
 import schedule
 from dotenv import load_dotenv
 from src.domain import Book, Channel, State, Technology, Type
@@ -13,6 +14,7 @@ from src.main import (
     get_all_channel,
     handle_list_command,
     handle_readme_command,
+    handle_run_command,
     handle_tips_command,
     send_daily_book_summary,
     send_daily_tech_summary,
@@ -451,3 +453,10 @@ class TestGetAllChannel:
         assert isinstance(result[1], Channel)
         assert result[1].channel_id == "7891011"
         assert result[1].name == "The Clean Coder"
+
+
+class TestHandleRunCommand:
+    @patch("src.main.run_all_jobs")
+    def test_handle_run_command(self, mock_run_all_job: MagicMock):
+        assert handle_run_command() == "I have succesfully started all scheduled jobs"
+        mock_run_all_job.assert_called_once()
