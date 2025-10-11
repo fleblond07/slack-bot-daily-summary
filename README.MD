@@ -24,6 +24,8 @@ Perfect for continuous learning without overwhelming your schedule.
 - `/list` → Show channels + registered summaries.
 - `/reset` → Clear the schedule and start fresh.
 - `/hello` → Quick test to check the bot is working.
+- `/run` → For testing or just impatient users - This will run all scheduled jobs.
+
 
 ---
 
