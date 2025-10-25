@@ -16,6 +16,7 @@ repos:
         entry: uv run --extra dev ty check
         language: system
         types: [python]
+        exclude: ^tests/
       - id: pytest
         name: pytest
         entry: uv run --extra dev pytest .

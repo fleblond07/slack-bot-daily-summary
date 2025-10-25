@@ -17,7 +17,7 @@ def get_book_information(isbn: str) -> Book:
     if google_library_response.status_code == 200 and (
         google_library_response.json().get("totalItems", 0) > 0
     ):
-        logger.info("Succesful response, loading book from google")
+        logger.info("Successful response, loading book from google")
         return _load_book_from_google(google_library_response.json())
 
     logger.warning(
@@ -36,7 +36,7 @@ def get_book_isbn(book_name: str) -> str:
     if google_library_response.status_code == 200 and (
         google_library_response.json().get("totalItems", 0) > 0
     ):
-        logger.info("Succesful response, extracting isbn from google")
+        logger.info("Successful response, extracting isbn from google")
         return _extract_isbn(
             google_library_response.json().get("items")[0].get("volumeInfo")
         )
@@ -54,7 +54,7 @@ def _extract_isbn(volume_info: dict[str, list[dict]]) -> str:
     industry_identifiers = volume_info.get("industryIdentifiers", [])
     for identifier in industry_identifiers:
         if identifier.get("type") == "ISBN_13":
-            logger.info("Succesfully found ISBN_13")
+            logger.info("Successfully found ISBN_13")
             return identifier.get("identifier", "")
 
     logger.warning(
@@ -72,10 +72,13 @@ def _load_book_from_google(json: dict) -> Book:
 
     book_information = json.get("items", {})[0].get("volumeInfo")
 
+    authors = book_information.get("authors", [])
+    author = authors[0] if authors else "Unknown Author"
+
     return Book(
         isbn=_extract_isbn(book_information),
         title=book_information.get("title"),
-        author=book_information.get("authors")[0],
+        author=author,
         state=State.ON_GOING,
         type=Type.get_type(book_information),
         page_count=book_information.get("pageCount", 0),

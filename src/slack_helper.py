@@ -8,9 +8,10 @@ from slack_sdk.errors import SlackApiError
 import hmac
 import hashlib
 import os
+import unicodedata
 from dotenv import load_dotenv
 
-from src.constant import MARKDOWN_RULES
+from src.constant import MARKDOWN_RULES, SLACK_TIMESTAMP_MAX_AGE_SECONDS
 import logging
 
 logger = logging.getLogger("daily_learner")
@@ -88,8 +89,13 @@ def get_channel_id(
 
 def _sanitize_book_name(object_name: str) -> str:
     logger.info(f"Sanitize {object_name=}")
-    object_name = object_name.lower().replace(" ", "-")
-    return object_name.replace("'", "-")
+    object_name = object_name.lower().replace(" ", "-").replace("'", "-")
+    object_name = unicodedata.normalize("NFD", object_name)
+    object_name = "".join(
+        char for char in object_name if unicodedata.category(char) != "Mn"
+    )
+    object_name = re.sub(r"[^a-z0-9-_]", "", object_name)
+    return object_name[:80]
 
 
 def create_channel(
@@ -118,7 +124,7 @@ def verify_slack_request(timestamp: str, slack_signature: str, body: bytes) -> b
     if not timestamp or not slack_signature:
         return False
 
-    if abs(time.time() - int(timestamp)) > 60 * 5:
+    if abs(time.time() - int(timestamp)) > SLACK_TIMESTAMP_MAX_AGE_SECONDS:
         return False
 
     basestring = f"v0:{timestamp}:{body.decode('utf-8')}"
