@@ -1,4 +1,5 @@
 import schedule
+from starlette.datastructures import UploadFile
 from src.schedule_helper import schedule_jobs, run_all_jobs, cancel_job_by_isbn
 from src.db_helper import (
     load_book_by_isbn,
@@ -156,12 +157,12 @@ def handle_run_command() -> str:
     return "I have succesfully started all scheduled jobs"
 
 
-def handle_readme_command(book_name: str | None) -> str:
+def handle_readme_command(book_name: str | UploadFile | None) -> str:
     logger.info("Handling readme command")
     book: Book | None
     err: str | None
 
-    if not book_name:
+    if not book_name or not isinstance(book_name, str):
         raise Exception("book_name is required")
 
     logger.info("Creating book")
@@ -206,10 +207,10 @@ def create_technology(technology_name: str) -> Technology:
     return technology
 
 
-def handle_tips_command(technology_name: str | None) -> str:
+def handle_tips_command(technology_name: str | None | UploadFile) -> str:
     logger.info("Handling tips command..")
 
-    if not technology_name:
+    if not technology_name or not isinstance(technology_name, str):
         raise Exception("technology_name is required")
 
     logger.info(f"Find or create {technology_name=}")

@@ -89,14 +89,20 @@ def save_jobs() -> None:
     logger.info("Saving jobs to database")
     jobs_db.truncate()
     for job in schedule.jobs:
-        if job.job_func.args:  # type: ignore[attr-defined]
-            identifier = job.job_func.args[0]  # type: ignore[attr-defined]
-            if job.job_func.func.__name__ == "_send_book_summary_by_isbn":  # type: ignore[attr-defined]
-                logger.info(f"Saving book {identifier=} job to database")
-                jobs_db.insert({"isbn": identifier})
-            elif job.job_func.func.__name__ == "_send_tech_summary_by_name":  # type: ignore[attr-defined]
-                logger.info(f"Saving technology {identifier=} job to database")
-                jobs_db.insert({"name": identifier})
+        if isbn := getattr(job.job_func.args[0], "isbn", None):  # type: ignore[attr-defined]
+            logger.info(f"Saving book {isbn=} job to database")
+            jobs_db.insert(
+                {
+                    "isbn": isbn,
+                }
+            )
+        elif name := getattr(job.job_func.args[0], "name", None):  # type: ignore[attr-defined]
+            logger.info(f"Saving technology {name=} job to database")
+            jobs_db.insert(
+                {
+                    "name": name,
+                }
+            )
 
 
 def reset_jobs() -> None:
