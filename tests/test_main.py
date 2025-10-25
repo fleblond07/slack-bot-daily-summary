@@ -174,9 +174,27 @@ class TestSendDailySummary:
         with pytest.raises(Exception) as exc:
             send_daily_book_summary(book)
 
-        assert f"An error occured getting the summary for book {book.title}" in str(
+        assert f"An error occurred getting the summary for book {book.title}" in str(
             exc.value
         )
+
+    def test_unknown_book_type_raises_error(self):
+        book = Book(
+            isbn="1234567812341",
+            title="My Book",
+            author="Author",
+            channel_id="C123",
+            type=None,  # Unknown type
+            current_chapter=0,
+            chapter_number=0,
+            page_count=0,
+            state=State.ON_GOING,
+        )
+
+        with pytest.raises(ValueError) as exc:
+            send_daily_book_summary(book)
+
+        assert "Unknown book type" in str(exc.value)
 
     @patch("src.main.send_slack_message")
     @patch("src.main.get_summary_for_technology")
@@ -198,7 +216,7 @@ class TestSendDailySummary:
         with pytest.raises(Exception) as excinfo:
             send_daily_tech_summary(Technology(name="Rust", channel_id="C789"))
 
-        assert "An error occured getting tips & tricks for tech Rust" in str(
+        assert "An error occurred getting tips & tricks for tech Rust" in str(
             excinfo.value
         )
         mock_get_summary.assert_called_once_with("Rust")
@@ -312,7 +330,7 @@ class TestHandleTipsCommand:
         with pytest.raises(Exception) as exc:
             handle_tips_command(None)
 
-        assert "Invalid technology name type given" in str(exc.value)
+        assert "technology_name is required" in str(exc.value)
 
     @patch("src.main.create_technology")
     def test_create_technology_returns_none_should_return_error_string(
@@ -322,7 +340,7 @@ class TestHandleTipsCommand:
 
         result = handle_tips_command("Rust")
 
-        assert result == "An error occured while registering the technology"
+        assert result == "An error occurred while registering the technology"
 
     @patch("src.main.save_jobs")
     @patch("src.main.schedule_jobs")
@@ -347,7 +365,7 @@ class TestHandleReadmeCommand:
     def test_invalid_book_name_type_should_raise(self):
         with pytest.raises(Exception) as exc:
             handle_readme_command(None)
-        assert "Invalid book_name type given" in str(exc.value)
+        assert "book_name is required" in str(exc.value)
 
     @patch("src.main.create_book")
     def test_create_book_returns_error_string(self, mock_create):
@@ -376,7 +394,7 @@ class TestHandleReadmeCommand:
         mock_create.return_value = (None, "")
 
         result = handle_readme_command("MyBook")
-        assert result == "An error occured while registering the book"
+        assert result == "An error occurred while registering the book"
 
 
 class TestHandleListCommand:
@@ -385,7 +403,7 @@ class TestHandleListCommand:
         mock_get_channels.return_value = []
 
         result = handle_list_command()
-        assert result == "An error occured when fetching the channel list"
+        assert result == "An error occurred when fetching the channel list"
 
     @patch("src.main.get_all_channel")
     def test_channels_no_jobs(self, mock_get_channels):

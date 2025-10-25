@@ -33,7 +33,7 @@ class TestSlackResetSchedule:
             response = client.post("/slack/reset_schedule", content=b"{}")
         mock_reset.assert_called_once()
         assert response.status_code == 200
-        assert "Succesful reset!" in response.json()["text"]
+        assert "Successful reset!" in response.json()["text"]
 
     def test_reset_schedule_invalid_signature(self):
         with patch("endpoint.verify_slack_request", return_value=False):
@@ -74,14 +74,15 @@ class TestSlackEvents:
         with (
             patch("endpoint.verify_slack_request", return_value=True),
             patch(
-                "endpoint.handle_readme_command", side_effect=Exception("Error occured")
+                "endpoint.handle_readme_command",
+                side_effect=Exception("Error occurred"),
             ),
         ):
             response = client.post(
                 "/slack/events",
                 data={"command": "/readme", "text": "Python"},
             )
-        assert response.json()["text"] == "Oh oh! An error occured - Error occured"
+        assert response.json()["text"] == "Oh oh! An error occurred - Error occurred"
 
     def test_list_success(self):
         with (
@@ -106,7 +107,7 @@ class TestSlackEvents:
                 "/slack/events",
                 data={"command": "/list"},
             )
-        assert "An error occured" in response.json()["text"]
+        assert "An error occurred" in response.json()["text"]
 
     def test_invalid_signature(self):
         with patch("endpoint.verify_slack_request", return_value=False):
@@ -137,7 +138,7 @@ class TestSlackEvents:
                 "/slack/events",
                 data={"command": "/tips", "text": "Python"},
             )
-        assert "Oh oh! An error occured - Oops" in response.json()["text"]
+        assert "Oh oh! An error occurred - Oops" in response.json()["text"]
         assert response.json()["response_type"] == "in_channel"
 
     def test_run_success(self):
@@ -172,7 +173,7 @@ class TestSlackEvents:
         assert response.status_code == 200
         json_data: dict[str, str] = response.json()
         assert json_data["response_type"] == "in_channel"
-        assert json_data["text"] == "Oh oh! An error occured - Something went wrong"
+        assert json_data["text"] == "Oh oh! An error occurred - Something went wrong"
 
 
 class TestSchedulerLifespan:
@@ -185,3 +186,35 @@ class TestSchedulerLifespan:
                 time.sleep(0.2)
         mock_load_jobs.assert_called_once()
         assert mock_run_pending.called
+
+
+class TestDebugMode:
+    def test_slack_hello_bypasses_security_in_debug_mode(self):
+        with patch("endpoint.debug_mode", True):
+            response = client.post("/slack/hello", content=b"{}")
+        assert response.status_code == 200
+        assert response.json() == {
+            "response_type": "in_channel",
+            "text": "Hello!",
+        }
+
+    def test_slack_reset_bypasses_security_in_debug_mode(self):
+        with (
+            patch("endpoint.debug_mode", True),
+            patch("endpoint.reset_jobs") as mock_reset,
+        ):
+            response = client.post("/slack/reset_schedule", content=b"{}")
+        mock_reset.assert_called_once()
+        assert response.status_code == 200
+
+    def test_slack_events_bypasses_security_in_debug_mode(self):
+        with (
+            patch("endpoint.debug_mode", True),
+            patch("endpoint.handle_list_command", return_value="List of channels"),
+        ):
+            response = client.post(
+                "/slack/events",
+                data={"command": "/list"},
+            )
+        assert response.status_code == 200
+        assert response.json()["text"] == "List of channels"

@@ -1,6 +1,5 @@
 import schedule
-from starlette.datastructures import UploadFile
-from src.schedule_helper import schedule_jobs, run_all_jobs
+from src.schedule_helper import schedule_jobs, run_all_jobs, cancel_job_by_isbn
 from src.db_helper import (
     load_book_by_isbn,
     load_books,
@@ -37,15 +36,17 @@ def send_daily_book_summary(book: Book) -> None:
         summary = get_summary_for_book_by_chapter(
             book.title, book.author, book.current_chapter
         )
-    if book.type == Type.BY_PAGE:
+    elif book.type == Type.BY_PAGE:
         logger.info("Getting summary for book by page")
         target_page = _get_pages_for_summary(book)
         summary = get_summary_for_book_by_page(
             book.title, book.author, target_page, book.current_page
         )
+    else:
+        raise ValueError(f"Unknown book type: {book.type}")
 
     if not summary:
-        raise Exception(f"An error occured getting the summary for book {book.title}")
+        raise Exception(f"An error occurred getting the summary for book {book.title}")
 
     logger.info(
         f"Sending slack message that contains summary... on channel {book.channel_id}"
@@ -64,14 +65,12 @@ def send_daily_book_summary(book: Book) -> None:
                 f"Sending last message for {book.title} on channel {book.channel_id}"
             )
             send_slack_message(book.channel_id, message)
+
+            cancel_job_by_isbn(book.isbn)
     else:
         logger.info("Update current page number and status")
         book.current_page = target_page
-        if (
-            book.current_page - 1 == book.page_count
-            or book.current_page == book.page_count
-            or book.current_page + 1 == book.page_count
-        ):
+        if book.current_page >= book.page_count:
             logger.info(
                 f"Final page range for {book.title} - Changing status to finished"
             )
@@ -81,6 +80,8 @@ def send_daily_book_summary(book: Book) -> None:
                 f"Sending last message for {book.title} on channel {book.channel_id}"
             )
             send_slack_message(book.channel_id, message)
+
+            cancel_job_by_isbn(book.isbn)
 
     logger.info("Writing updated book to database")
 
@@ -94,10 +95,10 @@ def send_daily_tech_summary(technology: Technology) -> None:
 
     if not summary:
         raise Exception(
-            f"An error occured getting tips & tricks for tech {technology.name}"
+            f"An error occurred getting tips & tricks for tech {technology.name}"
         )
 
-    logging.info(
+    logger.info(
         f"Sending tips for {technology.name} on channel {technology.channel_id}"
     )
 
@@ -155,20 +156,20 @@ def handle_run_command() -> str:
     return "I have succesfully started all scheduled jobs"
 
 
-def handle_readme_command(book_name: UploadFile | str | None) -> str:
+def handle_readme_command(book_name: str | None) -> str:
     logger.info("Handling readme command")
     book: Book | None
     err: str | None
 
-    if not isinstance(book_name, str):
-        raise Exception(f"Invalid book_name type given {type(book_name)}")
+    if not book_name:
+        raise Exception("book_name is required")
 
     logger.info("Creating book")
 
     book, err = create_book(book_name)
 
     if err:
-        logger.warning(f"An error occured when creating the book: {err=}")
+        logger.warning(f"An error occurred when creating the book: {err=}")
         return err
 
     if book:
@@ -176,7 +177,7 @@ def handle_readme_command(book_name: UploadFile | str | None) -> str:
         schedule_jobs(book)
         save_jobs()
         return f"{book.title} will be summarized for you everyday a new chapter at 9am on channel <#{book.channel_id}>"
-    return "An error occured while registering the book"
+    return "An error occurred while registering the book"
 
 
 def create_technology(technology_name: str) -> Technology:
@@ -205,11 +206,11 @@ def create_technology(technology_name: str) -> Technology:
     return technology
 
 
-def handle_tips_command(technology_name: UploadFile | str | None) -> str:
+def handle_tips_command(technology_name: str | None) -> str:
     logger.info("Handling tips command..")
 
-    if not isinstance(technology_name, str):
-        raise Exception(f"Invalid technology name type given {type(technology_name)}")
+    if not technology_name:
+        raise Exception("technology_name is required")
 
     logger.info(f"Find or create {technology_name=}")
 
@@ -225,7 +226,7 @@ def handle_tips_command(technology_name: UploadFile | str | None) -> str:
         save_jobs()
 
         return f"We will give you tips and tricks about {technology.name} everyday on channel <#{technology.channel_id}>"
-    return "An error occured while registering the technology"
+    return "An error occurred while registering the technology"
 
 
 def handle_list_command() -> str:
@@ -233,8 +234,8 @@ def handle_list_command() -> str:
     channel_list: list = get_all_channel()
 
     if not channel_list:
-        logger.warning(f"Channel_list is empty or an error occured: {channel_list}")
-        return "An error occured when fetching the channel list"
+        logger.warning(f"Channel_list is empty or an error occurred: {channel_list}")
+        return "An error occurred when fetching the channel list"
 
     logger.info("Formating channel links..")
     channel_links = [
@@ -253,13 +254,9 @@ def handle_list_command() -> str:
         else:
             title = getattr(object_arg, "name", "Unknown")
         job_list.append(f"Next run: {next_run}, Title: {title}")
-    return (
-        "Channels I created:\n"
-        + "\n".join(channel_links)
-        + "\n"
-        + "Current schedule:\n"
-        + "\n".join(job_list)
-    )
+    channels_text = "\n".join(channel_links)
+    jobs_text = "\n".join(job_list)
+    return f"Channels I created:\n{channels_text}\n\nCurrent schedule:\n{jobs_text}"
 
 
 def get_all_channel() -> list[Channel]:

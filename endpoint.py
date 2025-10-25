@@ -12,14 +12,45 @@ from src.main import (
     handle_run_command,
 )
 from src.slack_helper import verify_slack_request
+from src.constant import SCHEDULER_CHECK_INTERVAL_SECONDS
 import os
 import logging
+import logging.config
 from dotenv import load_dotenv
 
 load_dotenv()
 
+logging.config.dictConfig(
+    {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "default": {
+                "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+            },
+        },
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+                "formatter": "default",
+            },
+        },
+        "root": {
+            "level": os.getenv("LOG_LEVEL", "INFO"),
+            "handlers": ["console"],
+        },
+    }
+)
+
 logger = logging.getLogger("daily_learner")
 debug_mode = os.getenv("DEBUG_MODE", "false") == "true"
+
+if debug_mode:  # pragma: no cover
+    logger.warning("=" * 80)
+    logger.warning("⚠️  WARNING: DEBUG MODE ENABLED!")
+    logger.warning("⚠️  Security checks are bypassed in debug mode.")
+    logger.warning("⚠️  DO NOT use debug mode in production environments!")
+    logger.warning("=" * 80)
 
 
 async def scheduler_loop():
@@ -28,7 +59,7 @@ async def scheduler_loop():
     while True:
         logger.info("Checking pending...")
         schedule.run_pending()
-        await asyncio.sleep(60)
+        await asyncio.sleep(SCHEDULER_CHECK_INTERVAL_SECONDS)
 
 
 @asynccontextmanager
@@ -51,10 +82,16 @@ async def slack_hello(request: Request) -> JSONResponse:
     slack_signature = request.headers.get("X-Slack-Signature", "")
     body = await request.body()
 
-    if not verify_slack_request(timestamp, slack_signature, body) and not debug_mode:
-        logger.warning("Accessing the endpoint without the proper authorization")
-        return JSONResponse(status_code=403, content={"error": "Unsupported command"})
-    logger.info("Succesful Hello, sending back response")
+    if not debug_mode:
+        if not verify_slack_request(timestamp, slack_signature, body):
+            logger.warning("Accessing the endpoint without the proper authorization")
+            return JSONResponse(
+                status_code=403, content={"error": "Unsupported command"}
+            )
+    else:
+        logger.warning("⚠️  DEBUG MODE: Security checks bypassed for /slack/hello")
+
+    logger.info("Successful Hello, sending back response")
     return JSONResponse(content={"response_type": "in_channel", "text": "Hello!"})
 
 
@@ -64,18 +101,25 @@ async def reset_schedule(request: Request) -> JSONResponse:
     slack_signature = request.headers.get("X-Slack-Signature", "")
     body = await request.body()
 
-    if not verify_slack_request(timestamp, slack_signature, body) and not debug_mode:
-        logger.warning("Accessing the endpoint without the proper authorization")
-        return JSONResponse(status_code=403, content={"error": "Unsupported command"})
+    if not debug_mode:
+        if not verify_slack_request(timestamp, slack_signature, body):
+            logger.warning("Accessing the endpoint without the proper authorization")
+            return JSONResponse(
+                status_code=403, content={"error": "Unsupported command"}
+            )
+    else:
+        logger.warning(
+            "⚠️  DEBUG MODE: Security checks bypassed for /slack/reset_schedule"
+        )
 
-    logger.info("Reseting jobs...")
+    logger.info("Resetting jobs...")
 
     reset_jobs()
 
     logger.info("Job reseted succesfully")
 
     return JSONResponse(
-        content={"response_type": "in_channel", "text": "Succesful reset!"}
+        content={"response_type": "in_channel", "text": "Successful reset!"}
     )
 
 
@@ -85,9 +129,14 @@ async def slack_events(request: Request) -> JSONResponse | None:
     slack_signature = request.headers.get("X-Slack-Signature", "")
     body = await request.body()
 
-    if not verify_slack_request(timestamp, slack_signature, body) and not debug_mode:
-        logger.warning("Accessing the endpoint without the proper authorization")
-        return JSONResponse(status_code=403, content={"error": "Unsupported command"})
+    if not debug_mode:
+        if not verify_slack_request(timestamp, slack_signature, body):
+            logger.warning("Accessing the endpoint without the proper authorization")
+            return JSONResponse(
+                status_code=403, content={"error": "Unsupported command"}
+            )
+    else:
+        logger.warning("⚠️  DEBUG MODE: Security checks bypassed for /slack/events")
 
     logger.info("Processing slack/events..")
 
@@ -119,7 +168,9 @@ async def slack_events(request: Request) -> JSONResponse | None:
         try:
             logger.info("Handling readme command..")
 
-            result = handle_readme_command(text)
+            # Ensure text is a string
+            text_str = str(text) if text else None
+            result = handle_readme_command(text_str)
 
             logger.info("Handling readme succesful, sending response..")
 
@@ -131,12 +182,12 @@ async def slack_events(request: Request) -> JSONResponse | None:
             )
         except Exception as exception:
             logger.warning(
-                f"An error occured when processing readme: {traceback.format_exc()}"
+                f"An error occurred when processing readme: {traceback.format_exc()}"
             )
             return JSONResponse(
                 content={
                     "response_type": "in_channel",
-                    "text": f"Oh oh! An error occured - {str(exception)}",
+                    "text": f"Oh oh! An error occurred - {str(exception)}",
                 }
             )
     if command == "/list":
@@ -155,19 +206,21 @@ async def slack_events(request: Request) -> JSONResponse | None:
             )
         except Exception as exception:
             logger.warning(
-                f"An error occured when processing list: {traceback.format_exc()}"
+                f"An error occurred when processing list: {traceback.format_exc()}"
             )
             return JSONResponse(
                 content={
                     "response_type": "in_channel",
-                    "text": f"Oh oh! An error occured - {str(exception)}",
+                    "text": f"Oh oh! An error occurred - {str(exception)}",
                 }
             )
     if command == "/tips":
         try:
             logger.info("Handle tips command")
 
-            result = handle_tips_command(technology_name=text)
+            # Ensure text is a string
+            text_str = str(text) if text else None
+            result = handle_tips_command(technology_name=text_str)
 
             logger.info("Tips command succesful, sending response...")
 
@@ -179,12 +232,12 @@ async def slack_events(request: Request) -> JSONResponse | None:
             )
         except Exception as exception:
             logger.warning(
-                f"An error occured when processing list: {traceback.format_exc()}"
+                f"An error occurred when processing list: {traceback.format_exc()}"
             )
             return JSONResponse(
                 content={
                     "response_type": "in_channel",
-                    "text": f"Oh oh! An error occured - {str(exception)}",
+                    "text": f"Oh oh! An error occurred - {str(exception)}",
                 }
             )
     if command == "/run":
@@ -203,11 +256,11 @@ async def slack_events(request: Request) -> JSONResponse | None:
             )
         except Exception as exception:
             logger.warning(
-                f"An error occured when processing run command: {traceback.format_exc()}"
+                f"An error occurred when processing run command: {traceback.format_exc()}"
             )
             return JSONResponse(
                 content={
                     "response_type": "in_channel",
-                    "text": f"Oh oh! An error occured - {str(exception)}",
+                    "text": f"Oh oh! An error occurred - {str(exception)}",
                 }
             )
