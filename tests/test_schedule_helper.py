@@ -22,14 +22,14 @@ class TestScheduleJobs:
             schedule_jobs(None)
 
     def test_schedules_job_when_book_provided(self):
-        from src.schedule_helper import _send_book_summary_by_isbn
+        from src.main import send_daily_book_summary
 
         book = default_book_per_page
         schedule_jobs(book)
         assert len(schedule.jobs) == 1
         job = schedule.jobs[0]
-        assert job.job_func.func == _send_book_summary_by_isbn
-        assert job.job_func.args[0] == book.isbn
+        assert job.job_func.func == send_daily_book_summary
+        assert job.job_func.args[0].isbn == book.isbn
         assert (
             getattr(job, "at_time", None)
             == datetime.strptime(DEFAULT_SCHEDULE_TIME, "%H:%M").time()
@@ -58,12 +58,10 @@ class TestCancelJobByIsbn:
         schedule.clear()
 
     def test_cancels_job_when_isbn_found(self):
-        from src.schedule_helper import _send_book_summary_by_isbn
+        from src.main import send_daily_book_summary
 
         book = default_book_per_page
-        schedule.every().day.at(DEFAULT_SCHEDULE_TIME).do(
-            _send_book_summary_by_isbn, book.isbn
-        )
+        schedule.every().day.at(DEFAULT_SCHEDULE_TIME).do(send_daily_book_summary, book)
 
         assert len(schedule.jobs) == 1
         cancel_job_by_isbn(book.isbn)
@@ -79,12 +77,10 @@ class TestCancelJobByName:
         schedule.clear()
 
     def test_cancels_job_when_name_found(self):
-        from src.schedule_helper import _send_tech_summary_by_name
+        from src.main import send_daily_tech_summary
 
         tech = default_technology
-        schedule.every().day.at(DEFAULT_SCHEDULE_TIME).do(
-            _send_tech_summary_by_name, tech.name
-        )
+        schedule.every().day.at(DEFAULT_SCHEDULE_TIME).do(send_daily_tech_summary, tech)
 
         assert len(schedule.jobs) == 1
         cancel_job_by_name(tech.name)

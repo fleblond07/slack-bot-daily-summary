@@ -1,6 +1,6 @@
 from tinydb import TinyDB, Query
 import os
-from src.schedule_helper import _send_book_summary_by_isbn, _send_tech_summary_by_name
+from src.main import send_daily_book_summary, send_daily_tech_summary
 from src.db_helper import (
     load_book_by_isbn,
     load_books,
@@ -151,8 +151,8 @@ class TestLoadJobs:
         assert len(schedule.jobs) == 2
         for job in schedule.jobs:
             assert job.job_func.__name__ in [
-                "_send_book_summary_by_isbn",
-                "_send_tech_summary_by_name",
+                "send_daily_book_summary",
+                "send_daily_tech_summary",
             ]
 
 
@@ -165,9 +165,7 @@ class TestSaveJobs:
 
     def test_saves_book_jobs_from_schedule(self):
         schedule.clear()
-        schedule.every(1).seconds.do(
-            _send_book_summary_by_isbn, default_book_per_page.isbn
-        )
+        schedule.every(1).seconds.do(send_daily_book_summary, default_book_per_page)
 
         save_jobs()
         jobs = self.db.all()
@@ -176,9 +174,7 @@ class TestSaveJobs:
 
     def test_saves_tech_jobs_from_schedule(self):
         schedule.clear()
-        schedule.every(1).seconds.do(
-            _send_tech_summary_by_name, default_technology.name
-        )
+        schedule.every(1).seconds.do(send_daily_tech_summary, default_technology)
 
         save_jobs()
         jobs = self.db.all()

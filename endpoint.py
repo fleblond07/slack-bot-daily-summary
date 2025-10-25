@@ -142,7 +142,7 @@ async def slack_events(request: Request) -> JSONResponse | None:
 
     form = await request.form()
     command = form.get("command")
-    text = form.get("text")
+    text = form.get("text", "")
 
     logger.info(f"Checking command for {command=} and {text=}")
 
@@ -168,9 +168,7 @@ async def slack_events(request: Request) -> JSONResponse | None:
         try:
             logger.info("Handling readme command..")
 
-            # Ensure text is a string
-            text_str = str(text) if text else None
-            result = handle_readme_command(text_str)
+            result = handle_readme_command(text)
 
             logger.info("Handling readme succesful, sending response..")
 
@@ -218,9 +216,7 @@ async def slack_events(request: Request) -> JSONResponse | None:
         try:
             logger.info("Handle tips command")
 
-            # Ensure text is a string
-            text_str = str(text) if text else None
-            result = handle_tips_command(technology_name=text_str)
+            result = handle_tips_command(technology_name=text)
 
             logger.info("Tips command succesful, sending response...")
 

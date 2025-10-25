@@ -7,7 +7,7 @@ from src.constant import DEFAULT_SCHEDULE_TIME
 import httpx
 import schedule
 from endpoint import app
-from src.schedule_helper import _send_book_summary_by_isbn, _send_tech_summary_by_name
+from src.main import send_daily_book_summary, send_daily_tech_summary
 from tests.test_utils import default_book_for_integration, default_tech_for_integation
 
 
@@ -55,8 +55,8 @@ class TestIntegrationTestBookHappyPath:
 
         assert len(schedule.jobs) == 1
         job = schedule.jobs[0]
-        assert job.job_func.func == _send_book_summary_by_isbn
-        assert job.job_func.args[0] == default_book_for_integration.isbn
+        assert job.job_func.func == send_daily_book_summary
+        assert job.job_func.args[0].isbn == default_book_for_integration.isbn
         assert (
             getattr(job, "at_time", None)
             == datetime.strptime(DEFAULT_SCHEDULE_TIME, "%H:%M").time()
@@ -105,8 +105,8 @@ class TestIntegrationTestTechHappyPath:
         assert len(schedule.jobs) == 1
         job = schedule.jobs[0]
 
-        assert job.job_func.func == _send_tech_summary_by_name
-        assert job.job_func.args[0] == default_tech_for_integation.name
+        assert job.job_func.func == send_daily_tech_summary
+        assert job.job_func.args[0].name == default_tech_for_integation.name
         assert (
             getattr(job, "at_time", None)
             == datetime.strptime(DEFAULT_SCHEDULE_TIME, "%H:%M").time()
