@@ -123,8 +123,8 @@ async def reset_schedule(request: Request) -> JSONResponse:
     )
 
 
-@app.post("/slack/events", response_model=None)
-async def slack_events(request: Request) -> JSONResponse | None:
+@app.post("/slack/readme")
+async def slack_readme(request: Request) -> JSONResponse:
     timestamp = request.headers.get("X-Slack-Request-Timestamp", "")
     slack_signature = request.headers.get("X-Slack-Signature", "")
     body = await request.body()
@@ -136,127 +136,165 @@ async def slack_events(request: Request) -> JSONResponse | None:
                 status_code=403, content={"error": "Unsupported command"}
             )
     else:
-        logger.warning("⚠️  DEBUG MODE: Security checks bypassed for /slack/events")
+        logger.warning("⚠️  DEBUG MODE: Security checks bypassed for /slack/readme")
 
-    logger.info("Processing slack/events..")
+    logger.info("Processing readme command")
 
     form = await request.form()
-    command = form.get("command")
     text = form.get("text", "")
 
-    logger.info(f"Checking command for {command=} and {text=}")
-
-    if command not in ["/readme", "/list", "/tips", "/run"]:
-        logger.warning("Accessing the endpoint with a unavailable command")
+    if not text:
+        logger.warning("Invalid text given for readme command")
         return JSONResponse(
             content={
                 "response_type": "in_channel",
-                "text": f"Oh Sorry! the {command=} is not available yet",
+                "text": "Oh Sorry! You need to specify the book name you want to search!",
             }
         )
 
-    if command == "/readme":
-        logger.info("Processing readme command")
-        if not text:
-            logger.warning("Invalid text given for readme command")
+    try:
+        logger.info("Handling readme command..")
+
+        result = handle_readme_command(text)
+
+        logger.info("Handling readme succesful, sending response..")
+
+        return JSONResponse(
+            content={
+                "response_type": "in_channel",
+                "text": result,
+            }
+        )
+    except Exception as exception:
+        logger.warning(
+            f"An error occurred when processing readme: {traceback.format_exc()}"
+        )
+        return JSONResponse(
+            content={
+                "response_type": "in_channel",
+                "text": f"Oh oh! An error occurred - {str(exception)}",
+            }
+        )
+
+
+@app.post("/slack/list")
+async def slack_list(request: Request) -> JSONResponse:
+    timestamp = request.headers.get("X-Slack-Request-Timestamp", "")
+    slack_signature = request.headers.get("X-Slack-Signature", "")
+    body = await request.body()
+
+    if not debug_mode:
+        if not verify_slack_request(timestamp, slack_signature, body):
+            logger.warning("Accessing the endpoint without the proper authorization")
             return JSONResponse(
-                content={
-                    "response_type": "in_channel",
-                    "text": "Oh Sorry! You need to specify the book name you want to search!",
-                }
+                status_code=403, content={"error": "Unsupported command"}
             )
-        try:
-            logger.info("Handling readme command..")
+    else:
+        logger.warning("⚠️  DEBUG MODE: Security checks bypassed for /slack/list")
 
-            result = handle_readme_command(text)
+    try:
+        logger.info("Handle list command")
 
-            logger.info("Handling readme succesful, sending response..")
+        result = handle_list_command()
 
+        logger.info("List command succesful, sending response...")
+
+        return JSONResponse(
+            content={
+                "response_type": "in_channel",
+                "text": result,
+            }
+        )
+    except Exception as exception:
+        logger.warning(
+            f"An error occurred when processing list: {traceback.format_exc()}"
+        )
+        return JSONResponse(
+            content={
+                "response_type": "in_channel",
+                "text": f"Oh oh! An error occurred - {str(exception)}",
+            }
+        )
+
+
+@app.post("/slack/tips")
+async def slack_tips(request: Request) -> JSONResponse:
+    timestamp = request.headers.get("X-Slack-Request-Timestamp", "")
+    slack_signature = request.headers.get("X-Slack-Signature", "")
+    body = await request.body()
+
+    if not debug_mode:
+        if not verify_slack_request(timestamp, slack_signature, body):
+            logger.warning("Accessing the endpoint without the proper authorization")
             return JSONResponse(
-                content={
-                    "response_type": "in_channel",
-                    "text": result,
-                }
+                status_code=403, content={"error": "Unsupported command"}
             )
-        except Exception as exception:
-            logger.warning(
-                f"An error occurred when processing readme: {traceback.format_exc()}"
-            )
+    else:
+        logger.warning("⚠️  DEBUG MODE: Security checks bypassed for /slack/tips")
+
+    try:
+        logger.info("Handle tips command")
+
+        form = await request.form()
+        text = form.get("text", "")
+
+        result = handle_tips_command(technology_name=text)
+
+        logger.info("Tips command succesful, sending response...")
+
+        return JSONResponse(
+            content={
+                "response_type": "in_channel",
+                "text": result,
+            }
+        )
+    except Exception as exception:
+        logger.warning(
+            f"An error occurred when processing tips: {traceback.format_exc()}"
+        )
+        return JSONResponse(
+            content={
+                "response_type": "in_channel",
+                "text": f"Oh oh! An error occurred - {str(exception)}",
+            }
+        )
+
+
+@app.post("/slack/run")
+async def slack_run(request: Request) -> JSONResponse:
+    timestamp = request.headers.get("X-Slack-Request-Timestamp", "")
+    slack_signature = request.headers.get("X-Slack-Signature", "")
+    body = await request.body()
+
+    if not debug_mode:
+        if not verify_slack_request(timestamp, slack_signature, body):
+            logger.warning("Accessing the endpoint without the proper authorization")
             return JSONResponse(
-                content={
-                    "response_type": "in_channel",
-                    "text": f"Oh oh! An error occurred - {str(exception)}",
-                }
+                status_code=403, content={"error": "Unsupported command"}
             )
-    if command == "/list":
-        try:
-            logger.info("Handle list command")
+    else:
+        logger.warning("⚠️  DEBUG MODE: Security checks bypassed for /slack/run")
 
-            result = handle_list_command()
+    try:
+        logger.info("Handle run command")
 
-            logger.info("List command succesful, sending response...")
+        result = handle_run_command()
 
-            return JSONResponse(
-                content={
-                    "response_type": "in_channel",
-                    "text": result,
-                }
-            )
-        except Exception as exception:
-            logger.warning(
-                f"An error occurred when processing list: {traceback.format_exc()}"
-            )
-            return JSONResponse(
-                content={
-                    "response_type": "in_channel",
-                    "text": f"Oh oh! An error occurred - {str(exception)}",
-                }
-            )
-    if command == "/tips":
-        try:
-            logger.info("Handle tips command")
+        logger.info("Run command succesful, sending response...")
 
-            result = handle_tips_command(technology_name=text)
-
-            logger.info("Tips command succesful, sending response...")
-
-            return JSONResponse(
-                content={
-                    "response_type": "in_channel",
-                    "text": result,
-                }
-            )
-        except Exception as exception:
-            logger.warning(
-                f"An error occurred when processing list: {traceback.format_exc()}"
-            )
-            return JSONResponse(
-                content={
-                    "response_type": "in_channel",
-                    "text": f"Oh oh! An error occurred - {str(exception)}",
-                }
-            )
-    if command == "/run":
-        try:
-            logger.info("Handle run command")
-
-            result = handle_run_command()
-
-            logger.info("Run command succesful, sending response...")
-
-            return JSONResponse(
-                content={
-                    "response_type": "in_channel",
-                    "text": result,
-                }
-            )
-        except Exception as exception:
-            logger.warning(
-                f"An error occurred when processing run command: {traceback.format_exc()}"
-            )
-            return JSONResponse(
-                content={
-                    "response_type": "in_channel",
-                    "text": f"Oh oh! An error occurred - {str(exception)}",
-                }
-            )
+        return JSONResponse(
+            content={
+                "response_type": "in_channel",
+                "text": result,
+            }
+        )
+    except Exception as exception:
+        logger.warning(
+            f"An error occurred when processing run command: {traceback.format_exc()}"
+        )
+        return JSONResponse(
+            content={
+                "response_type": "in_channel",
+                "text": f"Oh oh! An error occurred - {str(exception)}",
+            }
+        )

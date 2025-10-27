@@ -42,20 +42,12 @@ class TestSlackResetSchedule:
         assert response.json()["error"] == "Unsupported command"
 
 
-class TestSlackEvents:
-    def test_unavailable_command(self):
-        with patch("endpoint.verify_slack_request", return_value=True):
-            response = client.post(
-                "/slack/events",
-                data={"command": "/unknown", "text": "test"},
-            )
-        assert "not available yet" in response.json()["text"]
-
+class TestSlackReadme:
     def test_readme_no_text(self):
         with patch("endpoint.verify_slack_request", return_value=True):
             response = client.post(
-                "/slack/events",
-                data={"command": "/readme"},
+                "/slack/readme",
+                data={"text": ""},
             )
         assert "need to specify the book" in response.json()["text"]
 
@@ -65,8 +57,8 @@ class TestSlackEvents:
             patch("endpoint.handle_readme_command", return_value="Book found!"),
         ):
             response = client.post(
-                "/slack/events",
-                data={"command": "/readme", "text": "Python"},
+                "/slack/readme",
+                data={"text": "Python"},
             )
         assert response.json()["text"] == "Book found!"
 
@@ -79,11 +71,21 @@ class TestSlackEvents:
             ),
         ):
             response = client.post(
-                "/slack/events",
-                data={"command": "/readme", "text": "Python"},
+                "/slack/readme",
+                data={"text": "Python"},
             )
         assert response.json()["text"] == "Oh oh! An error occurred - Error occurred"
 
+    def test_readme_invalid_signature(self):
+        with patch("endpoint.verify_slack_request", return_value=False):
+            response = client.post(
+                "/slack/readme",
+                data={"text": "Python"},
+            )
+        assert response.status_code == 403
+
+
+class TestSlackList:
     def test_list_success(self):
         with (
             patch("endpoint.verify_slack_request", return_value=True),
@@ -93,8 +95,8 @@ class TestSlackEvents:
             ),
         ):
             response = client.post(
-                "/slack/events",
-                data={"command": "/list", "text": ""},
+                "/slack/list",
+                data={},
             )
         assert response.json()["text"] == "Below the list of channels"
 
@@ -104,27 +106,29 @@ class TestSlackEvents:
             patch("endpoint.handle_list_command", side_effect=Exception("Oops")),
         ):
             response = client.post(
-                "/slack/events",
-                data={"command": "/list"},
+                "/slack/list",
+                data={},
             )
         assert "An error occurred" in response.json()["text"]
 
-    def test_invalid_signature(self):
+    def test_list_invalid_signature(self):
         with patch("endpoint.verify_slack_request", return_value=False):
             response = client.post(
-                "/slack/events",
-                data={"command": "/list"},
+                "/slack/list",
+                data={},
             )
         assert response.status_code == 403
 
+
+class TestSlackTips:
     def test_tips_success(self):
         with (
             patch("endpoint.verify_slack_request", return_value=True),
             patch("endpoint.handle_tips_command", return_value="Here are some tips!"),
         ):
             response = client.post(
-                "/slack/events",
-                data={"command": "/tips", "text": "Python"},
+                "/slack/tips",
+                data={"text": "Python"},
             )
         assert response.json()["text"] == "Here are some tips!"
         assert response.json()["response_type"] == "in_channel"
@@ -135,12 +139,22 @@ class TestSlackEvents:
             patch("endpoint.handle_tips_command", side_effect=Exception("Oops")),
         ):
             response = client.post(
-                "/slack/events",
-                data={"command": "/tips", "text": "Python"},
+                "/slack/tips",
+                data={"text": "Python"},
             )
         assert "Oh oh! An error occurred - Oops" in response.json()["text"]
         assert response.json()["response_type"] == "in_channel"
 
+    def test_tips_invalid_signature(self):
+        with patch("endpoint.verify_slack_request", return_value=False):
+            response = client.post(
+                "/slack/tips",
+                data={"text": "Python"},
+            )
+        assert response.status_code == 403
+
+
+class TestSlackRun:
     def test_run_success(self):
         with (
             patch("endpoint.verify_slack_request", return_value=True),
@@ -150,8 +164,8 @@ class TestSlackEvents:
             ),
         ):
             response = client.post(
-                "/slack/events",
-                data={"command": "/run"},
+                "/slack/run",
+                data={},
             )
         assert response.status_code == 200
         json_data: dict[str, str] = response.json()
@@ -167,13 +181,21 @@ class TestSlackEvents:
             ),
         ):
             response = client.post(
-                "/slack/events",
-                data={"command": "/run"},
+                "/slack/run",
+                data={},
             )
         assert response.status_code == 200
         json_data: dict[str, str] = response.json()
         assert json_data["response_type"] == "in_channel"
         assert json_data["text"] == "Oh oh! An error occurred - Something went wrong"
+
+    def test_run_invalid_signature(self):
+        with patch("endpoint.verify_slack_request", return_value=False):
+            response = client.post(
+                "/slack/run",
+                data={},
+            )
+        assert response.status_code == 403
 
 
 class TestSchedulerLifespan:
@@ -207,14 +229,50 @@ class TestDebugMode:
         mock_reset.assert_called_once()
         assert response.status_code == 200
 
-    def test_slack_events_bypasses_security_in_debug_mode(self):
+    def test_slack_list_bypasses_security_in_debug_mode(self):
         with (
             patch("endpoint.debug_mode", True),
             patch("endpoint.handle_list_command", return_value="List of channels"),
         ):
             response = client.post(
-                "/slack/events",
-                data={"command": "/list"},
+                "/slack/list",
+                data={},
             )
         assert response.status_code == 200
         assert response.json()["text"] == "List of channels"
+
+    def test_slack_readme_bypasses_security_in_debug_mode(self):
+        with (
+            patch("endpoint.debug_mode", True),
+            patch("endpoint.handle_readme_command", return_value="Book content"),
+        ):
+            response = client.post(
+                "/slack/readme",
+                data={"text": "Python"},
+            )
+        assert response.status_code == 200
+        assert response.json()["text"] == "Book content"
+
+    def test_slack_tips_bypasses_security_in_debug_mode(self):
+        with (
+            patch("endpoint.debug_mode", True),
+            patch("endpoint.handle_tips_command", return_value="Tips content"),
+        ):
+            response = client.post(
+                "/slack/tips",
+                data={"text": "React"},
+            )
+        assert response.status_code == 200
+        assert response.json()["text"] == "Tips content"
+
+    def test_slack_run_bypasses_security_in_debug_mode(self):
+        with (
+            patch("endpoint.debug_mode", True),
+            patch("endpoint.handle_run_command", return_value="Jobs executed"),
+        ):
+            response = client.post(
+                "/slack/run",
+                data={},
+            )
+        assert response.status_code == 200
+        assert response.json()["text"] == "Jobs executed"

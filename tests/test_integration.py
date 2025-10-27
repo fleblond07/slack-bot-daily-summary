@@ -44,8 +44,8 @@ class TestIntegrationTestBookHappyPath:
         mock_gpt.return_value = "This is your daily summary of x"
 
         response: httpx.Response = client.post(
-            "/slack/events",
-            data={"command": "/readme", "text": "Johnny McEngineer"},
+            "/slack/readme",
+            data={"text": "Johnny McEngineer"},
         )
         assert response.status_code == 200
         assert response.json() == {
@@ -93,8 +93,8 @@ class TestIntegrationTestTechHappyPath:
         mock_gpt.return_value = "This is your daily summary of x"
 
         response: httpx.Response = client.post(
-            "/slack/events",
-            data={"command": "/tips", "text": "VueJS"},
+            "/slack/tips",
+            data={"text": "VueJS"},
         )
         assert response.status_code == 200
         assert response.json() == {
