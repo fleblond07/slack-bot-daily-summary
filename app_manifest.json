@@ -10,40 +10,40 @@
     "slash_commands": [
       {
         "command": "/readme",
-        "url": "https://<YOUR_URL>/",
+        "url": "https://<YOUR_URL>/readme",
         "description": "Ask the bot to read something",
         "usage_hint": "'Name of the book'",
         "should_escape": false
       },
       {
         "command": "/hello",
-        "url": "https://<YOUR_URL>/",
+        "url": "https://<YOUR_URL>/hello",
         "description": "Returns a simple Hello message to make sure app is working",
         "should_escape": false
       },
       {
         "command": "/list",
-        "url": "https://<YOUR_URL>/",
+        "url": "https://<YOUR_URL>/list",
         "description": "Gives a list of all current books and scheduled jobs",
         "should_escape": false
       },
       {
         "command": "/reset",
-        "url": "https://<YOUR_URL>/",
+        "url": "https://<YOUR_URL>/reset_schedule",
         "description": "Reset the current schedule",
         "usage_hint": "WARNING THIS DELETES EVERYTHING",
         "should_escape": false
       },
       {
         "command": "/tips",
-        "url": "https://<YOUR_URL>/",
+        "url": "https://<YOUR_URL>/tips",
         "description": "Every day get tips and tricks for your favorite technologies !",
         "usage_hint": "/tips <Technology's name>",
         "should_escape": false
       },
       {
         "command": "/run",
-        "url": "https://<YOUR_URL>/",
+        "url": "https://<YOUR_URL>/run",
         "description": "If you can't wait for tomorrow you can always force the jobs to run",
         "usage_hint": "/run",
         "should_escape": false
