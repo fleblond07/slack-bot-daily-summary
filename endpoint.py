@@ -11,7 +11,7 @@ from src.main import (
     handle_tips_command,
     handle_run_command,
 )
-from src.slack_helper import verify_slack_request
+from src.decorators import require_slack_verification
 from src.constant import SCHEDULER_CHECK_INTERVAL_SECONDS
 import os
 import logging
@@ -77,41 +77,15 @@ app = FastAPI(lifespan=lifespan)
 
 
 @app.post("/slack/hello")
+@require_slack_verification()
 async def slack_hello(request: Request) -> JSONResponse:
-    timestamp = request.headers.get("X-Slack-Request-Timestamp", "")
-    slack_signature = request.headers.get("X-Slack-Signature", "")
-    body = await request.body()
-
-    if not debug_mode:
-        if not verify_slack_request(timestamp, slack_signature, body):
-            logger.warning("Accessing the endpoint without the proper authorization")
-            return JSONResponse(
-                status_code=403, content={"error": "Unsupported command"}
-            )
-    else:
-        logger.warning("⚠️  DEBUG MODE: Security checks bypassed for /slack/hello")
-
     logger.info("Successful Hello, sending back response")
     return JSONResponse(content={"response_type": "in_channel", "text": "Hello!"})
 
 
 @app.post("/slack/reset_schedule")
+@require_slack_verification()
 async def reset_schedule(request: Request) -> JSONResponse:
-    timestamp = request.headers.get("X-Slack-Request-Timestamp", "")
-    slack_signature = request.headers.get("X-Slack-Signature", "")
-    body = await request.body()
-
-    if not debug_mode:
-        if not verify_slack_request(timestamp, slack_signature, body):
-            logger.warning("Accessing the endpoint without the proper authorization")
-            return JSONResponse(
-                status_code=403, content={"error": "Unsupported command"}
-            )
-    else:
-        logger.warning(
-            "⚠️  DEBUG MODE: Security checks bypassed for /slack/reset_schedule"
-        )
-
     logger.info("Resetting jobs...")
 
     reset_jobs()
@@ -124,20 +98,8 @@ async def reset_schedule(request: Request) -> JSONResponse:
 
 
 @app.post("/slack/readme")
+@require_slack_verification()
 async def slack_readme(request: Request) -> JSONResponse:
-    timestamp = request.headers.get("X-Slack-Request-Timestamp", "")
-    slack_signature = request.headers.get("X-Slack-Signature", "")
-    body = await request.body()
-
-    if not debug_mode:
-        if not verify_slack_request(timestamp, slack_signature, body):
-            logger.warning("Accessing the endpoint without the proper authorization")
-            return JSONResponse(
-                status_code=403, content={"error": "Unsupported command"}
-            )
-    else:
-        logger.warning("⚠️  DEBUG MODE: Security checks bypassed for /slack/readme")
-
     logger.info("Processing readme command")
 
     form = await request.form()
@@ -178,20 +140,8 @@ async def slack_readme(request: Request) -> JSONResponse:
 
 
 @app.post("/slack/list")
+@require_slack_verification()
 async def slack_list(request: Request) -> JSONResponse:
-    timestamp = request.headers.get("X-Slack-Request-Timestamp", "")
-    slack_signature = request.headers.get("X-Slack-Signature", "")
-    body = await request.body()
-
-    if not debug_mode:
-        if not verify_slack_request(timestamp, slack_signature, body):
-            logger.warning("Accessing the endpoint without the proper authorization")
-            return JSONResponse(
-                status_code=403, content={"error": "Unsupported command"}
-            )
-    else:
-        logger.warning("⚠️  DEBUG MODE: Security checks bypassed for /slack/list")
-
     try:
         logger.info("Handle list command")
 
@@ -218,20 +168,8 @@ async def slack_list(request: Request) -> JSONResponse:
 
 
 @app.post("/slack/tips")
+@require_slack_verification()
 async def slack_tips(request: Request) -> JSONResponse:
-    timestamp = request.headers.get("X-Slack-Request-Timestamp", "")
-    slack_signature = request.headers.get("X-Slack-Signature", "")
-    body = await request.body()
-
-    if not debug_mode:
-        if not verify_slack_request(timestamp, slack_signature, body):
-            logger.warning("Accessing the endpoint without the proper authorization")
-            return JSONResponse(
-                status_code=403, content={"error": "Unsupported command"}
-            )
-    else:
-        logger.warning("⚠️  DEBUG MODE: Security checks bypassed for /slack/tips")
-
     try:
         logger.info("Handle tips command")
 
@@ -261,20 +199,8 @@ async def slack_tips(request: Request) -> JSONResponse:
 
 
 @app.post("/slack/run")
+@require_slack_verification()
 async def slack_run(request: Request) -> JSONResponse:
-    timestamp = request.headers.get("X-Slack-Request-Timestamp", "")
-    slack_signature = request.headers.get("X-Slack-Signature", "")
-    body = await request.body()
-
-    if not debug_mode:
-        if not verify_slack_request(timestamp, slack_signature, body):
-            logger.warning("Accessing the endpoint without the proper authorization")
-            return JSONResponse(
-                status_code=403, content={"error": "Unsupported command"}
-            )
-    else:
-        logger.warning("⚠️  DEBUG MODE: Security checks bypassed for /slack/run")
-
     try:
         logger.info("Handle run command")
 
