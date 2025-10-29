@@ -9,7 +9,7 @@ client = TestClient(app)
 
 class TestSlackHello:
     def test_slack_hello_valid_signature(self):
-        with patch("endpoint.verify_slack_request", return_value=True):
+        with patch("src.decorators.verify_slack_request", return_value=True):
             response = client.post("/slack/hello", content=b"{}")
         assert response.status_code == 200
         assert response.json() == {
@@ -18,7 +18,7 @@ class TestSlackHello:
         }
 
     def test_slack_hello_invalid_signature(self):
-        with patch("endpoint.verify_slack_request", return_value=False):
+        with patch("src.decorators.verify_slack_request", return_value=False):
             response = client.post("/slack/hello", content=b"{}")
         assert response.status_code == 403
         assert response.json()["error"] == "Unsupported command"
@@ -27,7 +27,7 @@ class TestSlackHello:
 class TestSlackResetSchedule:
     def test_reset_schedule_valid_signature(self):
         with (
-            patch("endpoint.verify_slack_request", return_value=True),
+            patch("src.decorators.verify_slack_request", return_value=True),
             patch("endpoint.reset_jobs") as mock_reset,
         ):
             response = client.post("/slack/reset_schedule", content=b"{}")
@@ -36,7 +36,7 @@ class TestSlackResetSchedule:
         assert "Successful reset!" in response.json()["text"]
 
     def test_reset_schedule_invalid_signature(self):
-        with patch("endpoint.verify_slack_request", return_value=False):
+        with patch("src.decorators.verify_slack_request", return_value=False):
             response = client.post("/slack/reset_schedule", content=b"{}")
         assert response.status_code == 403
         assert response.json()["error"] == "Unsupported command"
@@ -44,7 +44,7 @@ class TestSlackResetSchedule:
 
 class TestSlackReadme:
     def test_readme_no_text(self):
-        with patch("endpoint.verify_slack_request", return_value=True):
+        with patch("src.decorators.verify_slack_request", return_value=True):
             response = client.post(
                 "/slack/readme",
                 data={"text": ""},
@@ -53,7 +53,7 @@ class TestSlackReadme:
 
     def test_readme_success(self):
         with (
-            patch("endpoint.verify_slack_request", return_value=True),
+            patch("src.decorators.verify_slack_request", return_value=True),
             patch("endpoint.handle_readme_command", return_value="Book found!"),
         ):
             response = client.post(
@@ -64,7 +64,7 @@ class TestSlackReadme:
 
     def test_readme_failure(self):
         with (
-            patch("endpoint.verify_slack_request", return_value=True),
+            patch("src.decorators.verify_slack_request", return_value=True),
             patch(
                 "endpoint.handle_readme_command",
                 side_effect=Exception("Error occurred"),
@@ -77,7 +77,7 @@ class TestSlackReadme:
         assert response.json()["text"] == "Oh oh! An error occurred - Error occurred"
 
     def test_readme_invalid_signature(self):
-        with patch("endpoint.verify_slack_request", return_value=False):
+        with patch("src.decorators.verify_slack_request", return_value=False):
             response = client.post(
                 "/slack/readme",
                 data={"text": "Python"},
@@ -88,7 +88,7 @@ class TestSlackReadme:
 class TestSlackList:
     def test_list_success(self):
         with (
-            patch("endpoint.verify_slack_request", return_value=True),
+            patch("src.decorators.verify_slack_request", return_value=True),
             patch(
                 "endpoint.handle_list_command",
                 return_value="Below the list of channels",
@@ -102,7 +102,7 @@ class TestSlackList:
 
     def test_list_exception(self):
         with (
-            patch("endpoint.verify_slack_request", return_value=True),
+            patch("src.decorators.verify_slack_request", return_value=True),
             patch("endpoint.handle_list_command", side_effect=Exception("Oops")),
         ):
             response = client.post(
@@ -112,7 +112,7 @@ class TestSlackList:
         assert "An error occurred" in response.json()["text"]
 
     def test_list_invalid_signature(self):
-        with patch("endpoint.verify_slack_request", return_value=False):
+        with patch("src.decorators.verify_slack_request", return_value=False):
             response = client.post(
                 "/slack/list",
                 data={},
@@ -123,7 +123,7 @@ class TestSlackList:
 class TestSlackTips:
     def test_tips_success(self):
         with (
-            patch("endpoint.verify_slack_request", return_value=True),
+            patch("src.decorators.verify_slack_request", return_value=True),
             patch("endpoint.handle_tips_command", return_value="Here are some tips!"),
         ):
             response = client.post(
@@ -135,7 +135,7 @@ class TestSlackTips:
 
     def test_tips_exception(self):
         with (
-            patch("endpoint.verify_slack_request", return_value=True),
+            patch("src.decorators.verify_slack_request", return_value=True),
             patch("endpoint.handle_tips_command", side_effect=Exception("Oops")),
         ):
             response = client.post(
@@ -146,7 +146,7 @@ class TestSlackTips:
         assert response.json()["response_type"] == "in_channel"
 
     def test_tips_invalid_signature(self):
-        with patch("endpoint.verify_slack_request", return_value=False):
+        with patch("src.decorators.verify_slack_request", return_value=False):
             response = client.post(
                 "/slack/tips",
                 data={"text": "Python"},
@@ -157,7 +157,7 @@ class TestSlackTips:
 class TestSlackRun:
     def test_run_success(self):
         with (
-            patch("endpoint.verify_slack_request", return_value=True),
+            patch("src.decorators.verify_slack_request", return_value=True),
             patch(
                 "endpoint.handle_run_command",
                 return_value="Jobs executed successfully!",
@@ -174,7 +174,7 @@ class TestSlackRun:
 
     def test_run_failure(self):
         with (
-            patch("endpoint.verify_slack_request", return_value=True),
+            patch("src.decorators.verify_slack_request", return_value=True),
             patch(
                 "endpoint.handle_run_command",
                 side_effect=Exception("Something went wrong"),
@@ -190,7 +190,7 @@ class TestSlackRun:
         assert json_data["text"] == "Oh oh! An error occurred - Something went wrong"
 
     def test_run_invalid_signature(self):
-        with patch("endpoint.verify_slack_request", return_value=False):
+        with patch("src.decorators.verify_slack_request", return_value=False):
             response = client.post(
                 "/slack/run",
                 data={},
@@ -212,7 +212,7 @@ class TestSchedulerLifespan:
 
 class TestDebugMode:
     def test_slack_hello_bypasses_security_in_debug_mode(self):
-        with patch("endpoint.debug_mode", True):
+        with patch("src.decorators.os.getenv", return_value="true"):
             response = client.post("/slack/hello", content=b"{}")
         assert response.status_code == 200
         assert response.json() == {
@@ -222,7 +222,7 @@ class TestDebugMode:
 
     def test_slack_reset_bypasses_security_in_debug_mode(self):
         with (
-            patch("endpoint.debug_mode", True),
+            patch("src.decorators.os.getenv", return_value="true"),
             patch("endpoint.reset_jobs") as mock_reset,
         ):
             response = client.post("/slack/reset_schedule", content=b"{}")
@@ -231,7 +231,7 @@ class TestDebugMode:
 
     def test_slack_list_bypasses_security_in_debug_mode(self):
         with (
-            patch("endpoint.debug_mode", True),
+            patch("src.decorators.os.getenv", return_value="true"),
             patch("endpoint.handle_list_command", return_value="List of channels"),
         ):
             response = client.post(
@@ -243,7 +243,7 @@ class TestDebugMode:
 
     def test_slack_readme_bypasses_security_in_debug_mode(self):
         with (
-            patch("endpoint.debug_mode", True),
+            patch("src.decorators.os.getenv", return_value="true"),
             patch("endpoint.handle_readme_command", return_value="Book content"),
         ):
             response = client.post(
@@ -255,7 +255,7 @@ class TestDebugMode:
 
     def test_slack_tips_bypasses_security_in_debug_mode(self):
         with (
-            patch("endpoint.debug_mode", True),
+            patch("src.decorators.os.getenv", return_value="true"),
             patch("endpoint.handle_tips_command", return_value="Tips content"),
         ):
             response = client.post(
@@ -267,7 +267,7 @@ class TestDebugMode:
 
     def test_slack_run_bypasses_security_in_debug_mode(self):
         with (
-            patch("endpoint.debug_mode", True),
+            patch("src.decorators.os.getenv", return_value="true"),
             patch("endpoint.handle_run_command", return_value="Jobs executed"),
         ):
             response = client.post(

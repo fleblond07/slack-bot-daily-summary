@@ -24,7 +24,7 @@ class TestIntegrationTestBookHappyPath:
 
     @patch("src.main.get_channel_id")
     @patch("src.main.get_book_information")
-    @patch("endpoint.verify_slack_request")
+    @patch("src.decorators.verify_slack_request")
     @patch("src.main.get_book_isbn")
     @patch("src.ai_helper._send_prompt")
     @patch("src.main.send_slack_message")
@@ -78,7 +78,7 @@ class TestIntegrationTestTechHappyPath:
         schedule.clear()
 
     @patch("src.main.get_channel_id")
-    @patch("endpoint.verify_slack_request")
+    @patch("src.decorators.verify_slack_request")
     @patch("src.ai_helper._send_prompt")
     @patch("src.main.send_slack_message")
     def test_integration_tech_happy_path(
