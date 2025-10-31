@@ -3,7 +3,6 @@ __pycache__
 .pytest_cache
 .coverage
 data/*
-prod.json
-test_jobs.json
-test_books.json
 .python-version
+*.db-journal
+*.db

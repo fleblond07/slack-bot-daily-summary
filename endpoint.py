@@ -104,6 +104,11 @@ async def slack_readme(request: Request) -> JSONResponse:
 
     form = await request.form()
     text = form.get("text", "")
+    command = form.get("command", "")
+
+    if command != "/readme":
+        logger.warning(f"Invalid command given {command=}")
+        return JSONResponse(status_code=403, content={"error": "Unsupported command"})
 
     if not text:
         logger.warning("Invalid text given for readme command")
@@ -175,6 +180,13 @@ async def slack_tips(request: Request) -> JSONResponse:
 
         form = await request.form()
         text = form.get("text", "")
+        command = form.get("command", "")
+
+        if command != "/tips":
+            logger.warning(f"Invalid command given {command=}")
+            return JSONResponse(
+                status_code=403, content={"error": "Unsupported command"}
+            )
 
         result = handle_tips_command(technology_name=text)
 

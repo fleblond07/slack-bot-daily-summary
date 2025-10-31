@@ -47,7 +47,7 @@ class TestSlackReadme:
         with patch("src.decorators.verify_slack_request", return_value=True):
             response = client.post(
                 "/slack/readme",
-                data={"text": ""},
+                data={"text": "", "command": "/readme"},
             )
         assert "need to specify the book" in response.json()["text"]
 
@@ -58,7 +58,7 @@ class TestSlackReadme:
         ):
             response = client.post(
                 "/slack/readme",
-                data={"text": "Python"},
+                data={"text": "Python", "command": "/readme"},
             )
         assert response.json()["text"] == "Book found!"
 
@@ -72,15 +72,24 @@ class TestSlackReadme:
         ):
             response = client.post(
                 "/slack/readme",
-                data={"text": "Python"},
+                data={"text": "Python", "command": "/readme"},
             )
         assert response.json()["text"] == "Oh oh! An error occurred - Error occurred"
+
+    def test_readme_invalid_command(self):
+        with patch("src.decorators.verify_slack_request", return_value=True):
+            response = client.post(
+                "/slack/readme",
+                data={"text": "Python", "command": "/wrongcommand"},
+            )
+        assert response.status_code == 403
+        assert response.json()["error"] == "Unsupported command"
 
     def test_readme_invalid_signature(self):
         with patch("src.decorators.verify_slack_request", return_value=False):
             response = client.post(
                 "/slack/readme",
-                data={"text": "Python"},
+                data={"text": "Python", "command": "/readme"},
             )
         assert response.status_code == 403
 
@@ -128,7 +137,7 @@ class TestSlackTips:
         ):
             response = client.post(
                 "/slack/tips",
-                data={"text": "Python"},
+                data={"text": "Python", "command": "/tips"},
             )
         assert response.json()["text"] == "Here are some tips!"
         assert response.json()["response_type"] == "in_channel"
@@ -140,16 +149,25 @@ class TestSlackTips:
         ):
             response = client.post(
                 "/slack/tips",
-                data={"text": "Python"},
+                data={"text": "Python", "command": "/tips"},
             )
         assert "Oh oh! An error occurred - Oops" in response.json()["text"]
         assert response.json()["response_type"] == "in_channel"
+
+    def test_tips_invalid_command(self):
+        with patch("src.decorators.verify_slack_request", return_value=True):
+            response = client.post(
+                "/slack/tips",
+                data={"text": "Python", "command": "/wrongcommand"},
+            )
+        assert response.status_code == 403
+        assert response.json()["error"] == "Unsupported command"
 
     def test_tips_invalid_signature(self):
         with patch("src.decorators.verify_slack_request", return_value=False):
             response = client.post(
                 "/slack/tips",
-                data={"text": "Python"},
+                data={"text": "Python", "command": "/tips"},
             )
         assert response.status_code == 403
 
@@ -248,7 +266,7 @@ class TestDebugMode:
         ):
             response = client.post(
                 "/slack/readme",
-                data={"text": "Python"},
+                data={"text": "Python", "command": "/readme"},
             )
         assert response.status_code == 200
         assert response.json()["text"] == "Book content"
@@ -260,7 +278,7 @@ class TestDebugMode:
         ):
             response = client.post(
                 "/slack/tips",
-                data={"text": "React"},
+                data={"text": "React", "command": "/tips"},
             )
         assert response.status_code == 200
         assert response.json()["text"] == "Tips content"

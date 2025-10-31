@@ -232,11 +232,7 @@ def handle_tips_command(technology_name: str | None | UploadFile) -> str:
 
 def handle_list_command() -> str:
     logger.info("Getting all channels")
-    channel_list: list = get_all_channel()
-
-    if not channel_list:
-        logger.warning(f"Channel_list is empty or an error occurred: {channel_list}")
-        return "An error occurred when fetching the channel list"
+    channel_list: list[Channel] = get_all_channel()
 
     logger.info("Formating channel links..")
     channel_links = [
