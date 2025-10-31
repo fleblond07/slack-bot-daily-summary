@@ -399,11 +399,12 @@ class TestHandleReadmeCommand:
 
 class TestHandleListCommand:
     @patch("src.main.get_all_channel")
-    def test_no_channels_should_return_error(self, mock_get_channels):
+    def test_no_channels_should_return_empty_list(self, mock_get_channels):
         mock_get_channels.return_value = []
 
         result = handle_list_command()
-        assert result == "An error occurred when fetching the channel list"
+        assert "Channels I created:" in result
+        assert "Current schedule:" in result
 
     @patch("src.main.get_all_channel")
     def test_channels_no_jobs(self, mock_get_channels):

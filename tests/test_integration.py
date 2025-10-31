@@ -2,7 +2,7 @@ from datetime import datetime
 from fastapi.testclient import TestClient
 from unittest.mock import patch
 import os
-from tinydb import TinyDB
+from src.db_helper import get_db_connection
 from src.constant import DEFAULT_SCHEDULE_TIME
 import httpx
 import schedule
@@ -16,10 +16,20 @@ client = TestClient(app)
 
 class TestIntegrationTestBookHappyPath:
     def setup_method(self):
-        self.jobs_db = TinyDB(os.getenv("JOBS_DB_NAME", "test.json"))
-        self.jobs_db.truncate()
-        self.db = TinyDB(os.getenv("DB_NAME", "test_db.json"))
-        self.db.truncate()
+        self.jobs_db_name = os.getenv("JOBS_DB_NAME", "test_jobs.db")
+        self.db_name = os.getenv("DB_NAME", "test_books.db")
+
+        with get_db_connection(self.jobs_db_name) as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM jobs")
+
+        with get_db_connection(self.db_name) as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM channels")
+            cursor.execute("DELETE FROM items")
+            cursor.execute("DELETE FROM books")
+            cursor.execute("DELETE FROM technologies")
+
         schedule.clear()
 
     @patch("src.main.get_channel_id")
@@ -45,7 +55,7 @@ class TestIntegrationTestBookHappyPath:
 
         response: httpx.Response = client.post(
             "/slack/readme",
-            data={"text": "Johnny McEngineer"},
+            data={"text": "Johnny McEngineer", "command": "/readme"},
         )
         assert response.status_code == 200
         assert response.json() == {
@@ -71,10 +81,20 @@ class TestIntegrationTestBookHappyPath:
 
 class TestIntegrationTestTechHappyPath:
     def setup_method(self):
-        self.jobs_db = TinyDB(os.getenv("JOBS_DB_NAME", "test.json"))
-        self.jobs_db.truncate()
-        self.db = TinyDB(os.getenv("DB_NAME", "test_db.json"))
-        self.db.truncate()
+        self.jobs_db_name = os.getenv("JOBS_DB_NAME", "test_jobs.db")
+        self.db_name = os.getenv("DB_NAME", "test_books.db")
+
+        with get_db_connection(self.jobs_db_name) as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM jobs")
+
+        with get_db_connection(self.db_name) as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM channels")
+            cursor.execute("DELETE FROM items")
+            cursor.execute("DELETE FROM books")
+            cursor.execute("DELETE FROM technologies")
+
         schedule.clear()
 
     @patch("src.main.get_channel_id")
@@ -94,7 +114,7 @@ class TestIntegrationTestTechHappyPath:
 
         response: httpx.Response = client.post(
             "/slack/tips",
-            data={"text": "VueJS"},
+            data={"text": "VueJS", "command": "/tips"},
         )
         assert response.status_code == 200
         assert response.json() == {

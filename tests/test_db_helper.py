@@ -1,4 +1,3 @@
-from tinydb import TinyDB, Query
 import os
 from src.main import send_daily_book_summary, send_daily_tech_summary
 from src.db_helper import (
@@ -10,6 +9,7 @@ from src.db_helper import (
     save_jobs,
     write_book_to_db,
     write_technology_to_db,
+    get_db_connection,
 )
 from tests.test_utils import (
     default_dict_from_json,
@@ -25,10 +25,8 @@ import schedule
 
 class TestLoadBooks:
     def setup_method(self):
-        self.db = TinyDB(os.getenv("DB_NAME", "books.json"))
-        self.db.upsert(
-            default_dict_from_json, Query().isbn == default_dict_from_json.get("isbn")
-        )
+        self.db_name = os.getenv("DB_NAME", "test_books.db")
+        write_book_to_db(default_dict_from_json)
 
     def test_open_default_book(self):
         assert default_book_per_page in load_books()
@@ -36,10 +34,8 @@ class TestLoadBooks:
 
 class TestLoadBookByISBN:
     def setup_method(self):
-        self.db = TinyDB(os.getenv("DB_NAME", "books.json"))
-        self.db.upsert(
-            default_dict_from_json, Query().isbn == default_dict_from_json.get("isbn")
-        )
+        self.db_name = os.getenv("DB_NAME", "test_books.db")
+        write_book_to_db(default_dict_from_json)
 
     def test_get_specific_book(self):
         assert (
@@ -58,11 +54,8 @@ class TestLoadBookByISBN:
 
 class TestLoadTechnologyByName:
     def setup_method(self):
-        self.db = TinyDB(os.getenv("DB_NAME", "books.json"))
-        self.db.upsert(
-            default_technology_from_json,
-            Query().name == default_technology_from_json.get("name"),
-        )
+        self.db_name = os.getenv("DB_NAME", "test_books.db")
+        write_technology_to_db(default_technology_from_json)
 
     def test_get_specific_technology(self):
         assert (
@@ -81,10 +74,8 @@ class TestLoadTechnologyByName:
 
 class TestWriteBookToJSON:
     def setup_method(self):
-        self.db = TinyDB(os.getenv("DB_NAME", "books.json"))
-        self.db.upsert(
-            default_dict_from_json, Query().isbn == default_dict_from_json.get("isbn")
-        )
+        self.db_name = os.getenv("DB_NAME", "test_books.db")
+        write_book_to_db(default_dict_from_json)
 
     def test_write_empty_book_to_json_should_raise_exception(self):
         with pytest.raises(Exception) as exception:
@@ -93,24 +84,47 @@ class TestWriteBookToJSON:
 
     def test_write_valid_book_to_json(self):
         write_book_to_db(book=second_book_json)
-        result = self.db.search(Query().isbn == second_book_json.get("isbn"))
-        assert result[0] == second_book_json
+
+        expected_book = {
+            k: v
+            for k, v in second_book_json.items()
+            if k not in ("object_type", "channel_id")
+        }
+        with get_db_connection(self.db_name) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT * FROM books WHERE isbn = ?", (second_book_json.get("isbn"),)
+            )
+            row = cursor.fetchone()
+            result = dict(row)
+            for key in expected_book:
+                assert result[key] == expected_book[key]
 
     def test_update_valid_book_to_json(self):
         updated_dict = default_dict_from_json.copy()
         updated_dict["state"] = "finished"
         write_book_to_db(book=updated_dict)
-        result = self.db.search(Query().isbn == updated_dict.get("isbn"))
-        assert result[0] == updated_dict
+
+        expected_book = {
+            k: v
+            for k, v in updated_dict.items()
+            if k not in ("object_type", "channel_id")
+        }
+        with get_db_connection(self.db_name) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT * FROM books WHERE isbn = ?", (updated_dict.get("isbn"),)
+            )
+            row = cursor.fetchone()
+            result = dict(row)
+            for key in expected_book:
+                assert result[key] == expected_book[key]
 
 
 class TestWriteTechnologyToJSON:
     def setup_method(self):
-        self.db = TinyDB(os.getenv("DB_NAME", "books.json"))
-        self.db.upsert(
-            default_technology_from_json,
-            Query().name == default_technology_from_json.get("name"),
-        )
+        self.db_name = os.getenv("DB_NAME", "test_books.db")
+        write_technology_to_db(default_technology_from_json)
 
     def test_write_empty_book_to_json_should_raise_exception(self):
         with pytest.raises(Exception) as exception:
@@ -119,30 +133,52 @@ class TestWriteTechnologyToJSON:
 
     def test_write_valid_book_to_json(self):
         write_technology_to_db(technology=second_technology_from_json)
-        result = self.db.search(Query().name == second_technology_from_json.get("name"))
-        assert result[0] == second_technology_from_json
+
+        expected_tech = {
+            k: v
+            for k, v in second_technology_from_json.items()
+            if k not in ("object_type", "channel_id")
+        }
+        with get_db_connection(self.db_name) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT * FROM technologies WHERE name = ?",
+                (second_technology_from_json.get("name"),),
+            )
+            row = cursor.fetchone()
+            result = dict(row)
+            for key in expected_tech:
+                assert result[key] == expected_tech[key]
 
     def test_update_valid_book_to_json(self):
         updated_dict = default_technology_from_json.copy()
         updated_dict["name"] = "Go"
         write_technology_to_db(technology=updated_dict)
-        result = self.db.search(Query().name == updated_dict.get("name"))
-        assert result[0] == updated_dict
+
+        expected_tech = {
+            k: v
+            for k, v in updated_dict.items()
+            if k not in ("object_type", "channel_id")
+        }
+        with get_db_connection(self.db_name) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT * FROM technologies WHERE name = ?", (updated_dict.get("name"),)
+            )
+            row = cursor.fetchone()
+            result = dict(row)
+            for key in expected_tech:
+                assert result[key] == expected_tech[key]
 
 
 class TestLoadJobs:
     def setup_method(self):
-        self.db = TinyDB(os.getenv("JOBS_DB_NAME", "test.json"))
-        self.db.truncate()
-        self.db.insert(
-            {
-                "isbn": "49837410934324",
-                "object_type": "book",
-            },
-        )
-        self.db.insert(
-            {"name": "SQLAlchemy", "object_type": "tech"},
-        )
+        self.db_name = os.getenv("JOBS_DB_NAME", "test_jobs.db")
+        with get_db_connection(self.db_name) as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM jobs")
+            cursor.execute("INSERT INTO jobs (isbn) VALUES (?)", ("49837410934324",))
+            cursor.execute("INSERT INTO jobs (name) VALUES (?)", ("SQLAlchemy",))
 
     def test_loads_jobs_into_schedule(self):
         schedule.clear()
@@ -161,25 +197,31 @@ class TestSaveJobs:
         pass
 
     def setup_method(self):
-        self.db = TinyDB(os.getenv("JOBS_DB_NAME", "test.json"))
+        self.db_name = os.getenv("JOBS_DB_NAME", "test_jobs.db")
 
     def test_saves_book_jobs_from_schedule(self):
         schedule.clear()
         schedule.every(1).seconds.do(send_daily_book_summary, default_book_per_page)
 
         save_jobs()
-        jobs = self.db.all()
-        inserted_job = jobs[0]
-        assert inserted_job["isbn"] == default_book_per_page.isbn
+        with get_db_connection(self.db_name) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM jobs")
+            jobs = cursor.fetchall()
+            inserted_job = dict(jobs[0])
+            assert inserted_job["isbn"] == default_book_per_page.isbn
 
     def test_saves_tech_jobs_from_schedule(self):
         schedule.clear()
         schedule.every(1).seconds.do(send_daily_tech_summary, default_technology)
 
         save_jobs()
-        jobs = self.db.all()
-        inserted_job = jobs[0]
-        assert inserted_job["name"] == default_technology.name
+        with get_db_connection(self.db_name) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM jobs")
+            jobs = cursor.fetchall()
+            inserted_job = dict(jobs[0])
+            assert inserted_job["name"] == default_technology.name
 
 
 class TestResetJobs:
@@ -187,7 +229,7 @@ class TestResetJobs:
         pass
 
     def setup_method(self):
-        self.db = TinyDB(os.getenv("JOBS_DB_NAME", "test.json"))
+        self.db_name = os.getenv("JOBS_DB_NAME", "test_jobs.db")
 
     def test_resets_jobs_and_db(self):
         schedule.clear()
@@ -196,5 +238,45 @@ class TestResetJobs:
 
         reset_jobs()
         assert len(schedule.jobs) == 0
-        jobs = self.db.all()
-        assert len(jobs) == 0
+        with get_db_connection(self.db_name) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM jobs")
+            jobs = cursor.fetchall()
+            assert len(jobs) == 0
+
+
+class TestDatabaseExceptionHandling:
+    def setup_method(self):
+        self.db_name = os.getenv("DB_NAME", "test_books.db")
+
+    def test_database_exception_triggers_rollback(self):
+        with pytest.raises(Exception):
+            with get_db_connection(self.db_name) as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    "INSERT INTO books (isbn, title, author, page_count, state, type) VALUES (?, ?, ?, ?, ?, ?)",
+                    (
+                        "unique-isbn-123",
+                        "Test Book",
+                        "Author",
+                        100,
+                        "on_going",
+                        "by_page",
+                    ),
+                )
+                cursor.execute(
+                    "INSERT INTO books (isbn, title, author, page_count, state, type) VALUES (?, ?, ?, ?, ?, ?)",
+                    (
+                        "unique-isbn-123",
+                        "Another Book",
+                        "Author 2",
+                        200,
+                        "on_going",
+                        "by_page",
+                    ),
+                )
+        with get_db_connection(self.db_name) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM books WHERE isbn = ?", ("unique-isbn-123",))
+            result = cursor.fetchone()
+            assert result is None
