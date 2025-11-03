@@ -13,7 +13,7 @@ dependencies = [
     "openai==2.6.1",
     "python-dotenv==1.2.1",
     "requests==2.32.5",
-    "fastapi==0.120.4",
+    "fastapi==0.121.0",
     "uvicorn==0.38.0",
     "python-multipart==0.0.20",
     "pytest-dotenv==0.5.2",
