@@ -1,5 +1,5 @@
 from src.domain import Book, ObjectType, State, Technology, Type
-import os
+from src.constant import GOOGLE_API_URL
 import responses
 from dotenv import load_dotenv
 
@@ -62,7 +62,6 @@ default_book_per_page_from_google = Book(
     state=State.ON_GOING,
     type=Type.BY_PAGE,
     page_count=123,
-    channel_id="123456",
 )
 
 default_book_for_integration = Book(
@@ -71,7 +70,8 @@ default_book_for_integration = Book(
     author="ThisDude",
     state=State.ON_GOING,
     type=Type.BY_PAGE,
-    page_count=123,
+    page_count=10,
+    current_page=10,
     channel_id="1234567",
 )
 
@@ -179,7 +179,7 @@ google_json_response = {
 def default_google_get_responses():
     responses.add(
         responses.GET,
-        f"{os.getenv('GOOGLE_API_URL')}isbn:9780140328721",
+        f"{GOOGLE_API_URL}isbn:9780140328721",
         json=google_json_response,
         status=200,
     )
@@ -188,7 +188,7 @@ def default_google_get_responses():
 def google_get_responses_with_no_items():
     responses.add(
         responses.GET,
-        f"{os.getenv('GOOGLE_API_URL')}isbn:123456",
+        f"{GOOGLE_API_URL}isbn:123456",
         json={"totalItems": 0},
         status=200,
     )
@@ -197,7 +197,7 @@ def google_get_responses_with_no_items():
 def google_get_responses_with_bad_status_code():
     responses.add(
         responses.GET,
-        f"{os.getenv('GOOGLE_API_URL')}isbn:1234567",
+        f"{GOOGLE_API_URL}isbn:1234567",
         status=403,
     )
 
@@ -205,7 +205,7 @@ def google_get_responses_with_bad_status_code():
 def google_by_name_get_responses_with_no_items():
     responses.add(
         responses.GET,
-        f"{os.getenv('GOOGLE_API_URL')}intitle:SomeBook",
+        f"{GOOGLE_API_URL}intitle:SomeBook",
         json={"totalItems": 0, "items": []},
         status=200,
     )
@@ -214,7 +214,7 @@ def google_by_name_get_responses_with_no_items():
 def google_by_name_get_responses_with_bad_status_code():
     responses.add(
         responses.GET,
-        f"{os.getenv('GOOGLE_API_URL')}intitle:SomeBook",
+        f"{GOOGLE_API_URL}intitle:SomeBook",
         json={},
         status=500,
     )
@@ -223,7 +223,7 @@ def google_by_name_get_responses_with_bad_status_code():
 def google_by_name_get_responses_with_item():
     responses.add(
         responses.GET,
-        f"{os.getenv('GOOGLE_API_URL')}intitle:SomeBook",
+        f"{GOOGLE_API_URL}intitle:SomeBook",
         json={
             "totalItems": 1,
             "items": [

@@ -35,7 +35,10 @@ class TestRequireSlackVerification:
 
     def test_decorator_blocks_invalid_signature(self):
         """Test that decorator blocks request with invalid signature."""
-        with patch("src.decorators.verify_slack_request", return_value=False):
+        with (
+            patch("src.decorators.get_debug_mode", return_value=False),
+            patch("src.decorators.verify_slack_request", return_value=False),
+        ):
             response = client.post("/test_invalid", content=b'{"test": "data"}')
 
         assert response.status_code == 403
@@ -43,7 +46,7 @@ class TestRequireSlackVerification:
 
     def test_decorator_bypasses_security_in_debug_mode(self):
         """Test that decorator bypasses verification in debug mode."""
-        with patch("src.decorators.os.getenv", return_value="true"):
+        with patch("src.decorators.get_debug_mode", return_value=True):
             response = client.post("/test_valid", content=b'{"test": "data"}')
 
         assert response.status_code == 200
@@ -51,7 +54,10 @@ class TestRequireSlackVerification:
 
     def test_decorator_handles_missing_headers(self):
         """Test that decorator handles missing Slack headers."""
-        with patch("src.decorators.verify_slack_request", return_value=False):
+        with (
+            patch("src.decorators.get_debug_mode", return_value=False),
+            patch("src.decorators.verify_slack_request", return_value=False),
+        ):
             response = client.post("/test_valid", content=b'{"test": "data"}')
 
         assert response.status_code == 403

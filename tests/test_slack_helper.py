@@ -13,6 +13,7 @@ from src.slack_helper import (
 )
 from tests.test_utils import TestClient
 from unittest.mock import patch
+import src.secrets_manager
 
 
 class TestSendSlackMessage:
@@ -112,6 +113,9 @@ class TestVerifySlackSignature:
     def setup_method(self, method):
         self.secret = os.getenv("SLACK_SIGNING_SECRET", "test_signature")
 
+    def teardown_method(self, method):
+        src.secrets_manager._secrets_manager = None
+
     def _generate_signature(self, secret: str, timestamp: str, body: bytes) -> str:
         basestring = f"v0:{timestamp}:{body.decode('utf-8')}"
         return (
@@ -139,11 +143,41 @@ class TestVerifySlackSignature:
         body = b"hello"
         timestamp = str(int(time.time()))
         bad_sig = "v0=wrong_signature"
+
+        test_secret = self.secret
+
+        class MockSecretsManager:
+            def get_secret(self, key: str) -> str:
+                return test_secret
+
+        src.secrets_manager._secrets_manager = MockSecretsManager()
+
         assert verify_slack_request(timestamp, bad_sig, body) is False
 
     def test_valid_signature(self):
+        test_secret = self.secret
+
+        class MockSecretsManager:
+            def get_secret(self, key: str) -> str:
+                return test_secret
+
+        src.secrets_manager._secrets_manager = MockSecretsManager()
+
         body = b"hello"
         timestamp = str(int(time.time()))
         sig = self._generate_signature(self.secret, timestamp, body)
 
         assert verify_slack_request(timestamp, sig, body) is True
+
+    def test_missing_secret(self):
+        body = b"hello"
+        timestamp = str(int(time.time()))
+        sig = "v0=test_signature"
+
+        class MockSecretsManager:
+            def get_secret(self, key: str) -> str | None:
+                return None
+
+        src.secrets_manager._secrets_manager = MockSecretsManager()
+
+        assert verify_slack_request(timestamp, sig, body) is False

@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 import schedule
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from src.secrets_manager import SecretsManager, get_log_level
 from src.db_helper import load_jobs, reset_jobs
 from src.main import (
     handle_list_command,
@@ -13,12 +14,11 @@ from src.main import (
 )
 from src.decorators import require_slack_verification
 from src.constant import SCHEDULER_CHECK_INTERVAL_SECONDS
-import os
 import logging
 import logging.config
-from dotenv import load_dotenv
 
-load_dotenv()
+_secrets_manager = SecretsManager()
+LOG_LEVEL = get_log_level()
 
 logging.config.dictConfig(
     {
@@ -36,21 +36,13 @@ logging.config.dictConfig(
             },
         },
         "root": {
-            "level": os.getenv("LOG_LEVEL", "INFO"),
+            "level": LOG_LEVEL,
             "handlers": ["console"],
         },
     }
 )
 
 logger = logging.getLogger("daily_learner")
-debug_mode = os.getenv("DEBUG_MODE", "false") == "true"
-
-if debug_mode:  # pragma: no cover
-    logger.warning("=" * 80)
-    logger.warning("⚠️  WARNING: DEBUG MODE ENABLED!")
-    logger.warning("⚠️  Security checks are bypassed in debug mode.")
-    logger.warning("⚠️  DO NOT use debug mode in production environments!")
-    logger.warning("=" * 80)
 
 
 async def scheduler_loop():

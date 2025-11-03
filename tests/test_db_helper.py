@@ -1,4 +1,3 @@
-import os
 from src.main import send_daily_book_summary, send_daily_tech_summary
 from src.db_helper import (
     load_book_by_isbn,
@@ -11,6 +10,7 @@ from src.db_helper import (
     write_technology_to_db,
     get_db_connection,
 )
+from src.constant import DB_NAME, JOBS_DB_NAME
 from tests.test_utils import (
     default_dict_from_json,
     default_technology,
@@ -25,7 +25,7 @@ import schedule
 
 class TestLoadBooks:
     def setup_method(self):
-        self.db_name = os.getenv("DB_NAME", "test_books.db")
+        self.db_name = DB_NAME
         write_book_to_db(default_dict_from_json)
 
     def test_open_default_book(self):
@@ -34,7 +34,7 @@ class TestLoadBooks:
 
 class TestLoadBookByISBN:
     def setup_method(self):
-        self.db_name = os.getenv("DB_NAME", "test_books.db")
+        self.db_name = DB_NAME
         write_book_to_db(default_dict_from_json)
 
     def test_get_specific_book(self):
@@ -54,7 +54,7 @@ class TestLoadBookByISBN:
 
 class TestLoadTechnologyByName:
     def setup_method(self):
-        self.db_name = os.getenv("DB_NAME", "test_books.db")
+        self.db_name = DB_NAME
         write_technology_to_db(default_technology_from_json)
 
     def test_get_specific_technology(self):
@@ -74,7 +74,7 @@ class TestLoadTechnologyByName:
 
 class TestWriteBookToJSON:
     def setup_method(self):
-        self.db_name = os.getenv("DB_NAME", "test_books.db")
+        self.db_name = DB_NAME
         write_book_to_db(default_dict_from_json)
 
     def test_write_empty_book_to_json_should_raise_exception(self):
@@ -123,7 +123,7 @@ class TestWriteBookToJSON:
 
 class TestWriteTechnologyToJSON:
     def setup_method(self):
-        self.db_name = os.getenv("DB_NAME", "test_books.db")
+        self.db_name = DB_NAME
         write_technology_to_db(default_technology_from_json)
 
     def test_write_empty_book_to_json_should_raise_exception(self):
@@ -173,7 +173,7 @@ class TestWriteTechnologyToJSON:
 
 class TestLoadJobs:
     def setup_method(self):
-        self.db_name = os.getenv("JOBS_DB_NAME", "test_jobs.db")
+        self.db_name = JOBS_DB_NAME
         with get_db_connection(self.db_name) as conn:
             cursor = conn.cursor()
             cursor.execute("DELETE FROM jobs")
@@ -197,7 +197,7 @@ class TestSaveJobs:
         pass
 
     def setup_method(self):
-        self.db_name = os.getenv("JOBS_DB_NAME", "test_jobs.db")
+        self.db_name = JOBS_DB_NAME
 
     def test_saves_book_jobs_from_schedule(self):
         schedule.clear()
@@ -229,7 +229,7 @@ class TestResetJobs:
         pass
 
     def setup_method(self):
-        self.db_name = os.getenv("JOBS_DB_NAME", "test_jobs.db")
+        self.db_name = JOBS_DB_NAME
 
     def test_resets_jobs_and_db(self):
         schedule.clear()
@@ -247,7 +247,7 @@ class TestResetJobs:
 
 class TestDatabaseExceptionHandling:
     def setup_method(self):
-        self.db_name = os.getenv("DB_NAME", "test_books.db")
+        self.db_name = DB_NAME
 
     def test_database_exception_triggers_rollback(self):
         with pytest.raises(Exception):

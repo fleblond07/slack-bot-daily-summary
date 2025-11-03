@@ -7,16 +7,13 @@ from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 import hmac
 import hashlib
-import os
 import unicodedata
-from dotenv import load_dotenv
 
 from src.constant import MARKDOWN_RULES, SLACK_TIMESTAMP_MAX_AGE_SECONDS
+from src.secrets_manager import get_secret
 import logging
 
 logger = logging.getLogger("daily_learner")
-
-load_dotenv()
 
 if TYPE_CHECKING:
     from tests.test_utils import TestClient
@@ -32,7 +29,7 @@ def send_slack_message(
         logger.info(f"Sending slack message in {channel_id=}")
 
         logger.info("Loading web client..")
-        client = client or WebClient(token=os.getenv("SLACK_BOT_TOKEN"))
+        client = client or WebClient(token=get_secret("SLACK_BOT_TOKEN"))
 
         logger.info("Posting message...")
         response = client.chat_postMessage(
@@ -67,7 +64,7 @@ def get_channel_id(
 
         logger.info(f"Get channel_id for {object_name=}")
 
-        client = client or WebClient(token=os.getenv("SLACK_BOT_TOKEN"))
+        client = client or WebClient(token=get_secret("SLACK_BOT_TOKEN"))
 
         logger.info("Get the list of channels from Slack...")
         response = client.conversations_list(types="public_channel")
@@ -107,7 +104,7 @@ def create_channel(
 
         logger.info(f"Creating channel for {object_name=}")
 
-        client = client or WebClient(token=os.getenv("SLACK_BOT_TOKEN"))
+        client = client or WebClient(token=get_secret("SLACK_BOT_TOKEN"))
 
         channel = client.conversations_create(name=object_name)
 
@@ -129,10 +126,15 @@ def verify_slack_request(timestamp: str, slack_signature: str, body: bytes) -> b
 
     basestring = f"v0:{timestamp}:{body.decode('utf-8')}"
 
+    signing_secret = get_secret("SLACK_SIGNING_SECRET")
+    if not signing_secret:
+        logger.error("SLACK_SIGNING_SECRET not available")
+        return False
+
     expected_signature = (
         "v0="
         + hmac.new(
-            os.getenv("SLACK_SIGNING_SECRET", "").encode(),
+            signing_secret.encode(),
             basestring.encode(),
             hashlib.sha256,
         ).hexdigest()

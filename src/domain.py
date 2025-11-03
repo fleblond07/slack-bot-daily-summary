@@ -1,9 +1,5 @@
 from dataclasses import dataclass
 from enum import Enum
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
 
 
 class State(Enum):
@@ -57,7 +53,7 @@ class ChannelList:
 @dataclass
 class Technology:
     name: str
-    channel_id: str = os.getenv("DEFAULT_SLACK_CHANNEL", "123456")
+    channel_id: str = ""
     object_type: ObjectType = ObjectType.TECH
 
     @staticmethod
@@ -86,10 +82,10 @@ class Book:
     state: State
     type: Type
     object_type: ObjectType = ObjectType.BOOK
+    channel_id: str = ""
     chapter_number: int = 0
     current_chapter: int = 0
     current_page: int = 0
-    channel_id: str = os.getenv("DEFAULT_SLACK_CHANNEL", "123456")
 
     @staticmethod
     def to_json(book: "Book") -> dict:

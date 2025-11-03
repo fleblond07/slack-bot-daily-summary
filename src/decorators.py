@@ -1,10 +1,10 @@
-import os
 import logging
 from functools import wraps
 from typing import Callable, Awaitable
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from src.slack_helper import verify_slack_request
+from src.secrets_manager import get_debug_mode
 
 logger = logging.getLogger("daily_learner")
 
@@ -24,7 +24,7 @@ def require_slack_verification() -> Callable[
     ) -> Callable[[Request], Awaitable[JSONResponse]]:
         @wraps(func)
         async def wrapper(request: Request) -> JSONResponse:
-            debug_mode: bool = os.getenv("DEBUG_MODE", "false") == "true"
+            debug_mode: bool = get_debug_mode()
             timestamp: str = request.headers.get("X-Slack-Request-Timestamp", "")
             slack_signature: str = request.headers.get("X-Slack-Signature", "")
             body: bytes = await request.body()
