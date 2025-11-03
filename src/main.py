@@ -18,13 +18,10 @@ from src.ai_helper import (
 from src.domain import Book, ObjectType, State, Technology, Type, Channel
 from src.slack_helper import send_slack_message, get_channel_id
 from src.external_helper import get_book_information, get_book_isbn
-from dotenv import load_dotenv
-import os
+from src.constant import DEFAULT_PAGES_SPLIT
 import logging
 
 logger = logging.getLogger("daily_learner")
-
-load_dotenv()
 
 
 def send_daily_book_summary(book: Book) -> None:
@@ -108,7 +105,7 @@ def send_daily_tech_summary(technology: Technology) -> None:
 
 def _get_pages_for_summary(book: Book) -> int:
     logger.info("Getting page numbers for summary")
-    page_split = book.page_count // int(os.getenv("DEFAULT_PAGES_SPLIT", 15))
+    page_split = book.page_count // DEFAULT_PAGES_SPLIT
     if book.current_page > 0:
         return book.current_page + page_split
     return page_split

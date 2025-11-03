@@ -1,15 +1,12 @@
 import sqlite3
-import os
 from contextlib import contextmanager
 from src.schedule_helper import schedule_jobs
 from src.domain import Book, ObjectType, Technology
+from src.constant import DB_NAME, JOBS_DB_NAME
 import schedule
 import logging
 
 logger = logging.getLogger("daily_learner")
-
-DB_NAME = os.getenv("DB_NAME", "books.db")
-JOBS_DB_NAME = os.getenv("JOBS_DB_NAME", "jobs.db")
 
 
 @contextmanager

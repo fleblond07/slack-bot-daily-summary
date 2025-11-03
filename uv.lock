@@ -128,6 +128,19 @@ wheels = [
 ]
 
 [[package]]
+name = "doppler-sdk"
+version = "1.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "http-exceptions" },
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f0/86/ed824761e8a367ddbabfbd78772316701157c92292a980c5f698ce41316d/doppler-sdk-1.3.0.tar.gz", hash = "sha256:d55a5b423f908803d90eccfef4b666df0531ef0d713b7928405eaca59a3f67e9", size = 38232, upload-time = "2024-04-08T22:57:18.534Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/12/f7/ee4de89350da93140fd9d0317d1246e48738e487bf7ae7b5227dd49aac86/doppler_sdk-1.3.0-py3-none-any.whl", hash = "sha256:78669a46950ab66d6b0c86d3be0eb12c74d9d5f0ee13fefb60ca44ce5385d2ed", size = 121421, upload-time = "2024-04-08T22:57:16.912Z" },
+]
+
+[[package]]
 name = "fastapi"
 version = "0.120.4"
 source = { registry = "https://pypi.org/simple" }
@@ -149,6 +162,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/01/ee/02a2c011bdab74c6fb3c75474d40b3052059d95df7e73351460c8588d963/h11-0.16.0.tar.gz", hash = "sha256:4e35b956cf45792e4caa5885e69fba00bdbc6ffafbfa020300e549b208ee5ff1", size = 101250, upload-time = "2025-04-24T03:35:25.427Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/04/4b/29cac41a4d98d144bf5f6d33995617b185d14b22401f75ca86f384e87ff1/h11-0.16.0-py3-none-any.whl", hash = "sha256:63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86", size = 37515, upload-time = "2025-04-24T03:35:24.344Z" },
+]
+
+[[package]]
+name = "http-exceptions"
+version = "0.2.10"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/1a/ee/eed139b5dcd4019d1148eebffb199a22320b9e46e268de3bffcca9a9012c/http-exceptions-0.2.10.tar.gz", hash = "sha256:77484475de13ead5dac72816387dd3c5d3898fd2588af02c1cd5454fb7412c06", size = 9456, upload-time = "2022-02-15T13:49:44.367Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/9d/ca/53101f30b30fe3c6c247aced01aeda263ef4ce8c8dad44f2d0d591a4f0b3/http_exceptions-0.2.10-py3-none-any.whl", hash = "sha256:26c97d021f798f8e6c9db477385d2e8f49ae2b26e6acb92b857637fb21cb1e2e", size = 8843, upload-time = "2022-02-15T13:49:45.587Z" },
 ]
 
 [[package]]
@@ -463,6 +485,7 @@ name = "slack-bot-daily-summary"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "doppler-sdk" },
     { name = "fastapi" },
     { name = "openai" },
     { name = "pytest-dotenv" },
@@ -485,6 +508,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "doppler-sdk", specifier = "==1.3.0" },
     { name = "fastapi", specifier = "==0.120.4" },
     { name = "openai", specifier = "==2.6.1" },
     { name = "pytest", marker = "extra == 'dev'", specifier = "==8.4.2" },

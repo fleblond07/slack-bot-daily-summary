@@ -19,16 +19,59 @@ class TestIntegrationTestBookHappyPath:
         self.jobs_db_name = os.getenv("JOBS_DB_NAME", "test_jobs.db")
         self.db_name = os.getenv("DB_NAME", "test_books.db")
 
+        # Initialize jobs database
         with get_db_connection(self.jobs_db_name) as conn:
             cursor = conn.cursor()
-            cursor.execute("DELETE FROM jobs")
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS jobs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    isbn TEXT,
+                    name TEXT
+                )
+            """)
+            cursor.execute("DELETE FROM jobs WHERE 1=1")
 
+        # Initialize main database
         with get_db_connection(self.db_name) as conn:
             cursor = conn.cursor()
-            cursor.execute("DELETE FROM channels")
-            cursor.execute("DELETE FROM items")
-            cursor.execute("DELETE FROM books")
-            cursor.execute("DELETE FROM technologies")
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS items (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    object_type TEXT NOT NULL,
+                    object_id INTEGER NOT NULL,
+                    UNIQUE(object_type, object_id)
+                )
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS books (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    isbn TEXT UNIQUE NOT NULL,
+                    title TEXT,
+                    author TEXT,
+                    page_count INTEGER,
+                    state TEXT,
+                    type TEXT,
+                    chapter_number INTEGER,
+                    current_chapter INTEGER,
+                    current_page INTEGER
+                )
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS technologies (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT UNIQUE NOT NULL
+                )
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS channels (
+                    channel_id TEXT NOT NULL,
+                    object_id INTEGER UNIQUE NOT NULL
+                )
+            """)
+            cursor.execute("DELETE FROM channels WHERE 1=1")
+            cursor.execute("DELETE FROM items WHERE 1=1")
+            cursor.execute("DELETE FROM books WHERE 1=1")
+            cursor.execute("DELETE FROM technologies WHERE 1=1")
 
         schedule.clear()
 
@@ -74,8 +117,11 @@ class TestIntegrationTestBookHappyPath:
 
         job.run()
 
-        mock_send_slack.assert_called_once_with(
-            "1234567", "This is your daily summary of x"
+        assert mock_send_slack.call_count == 2
+        mock_send_slack.assert_any_call("1234567", "This is your daily summary of x")
+        mock_send_slack.assert_any_call(
+            "1234567",
+            "This was the final summary for Johnny McEngineer - Thank you for using the bot!",
         )
 
 
@@ -84,16 +130,59 @@ class TestIntegrationTestTechHappyPath:
         self.jobs_db_name = os.getenv("JOBS_DB_NAME", "test_jobs.db")
         self.db_name = os.getenv("DB_NAME", "test_books.db")
 
+        # Initialize jobs database
         with get_db_connection(self.jobs_db_name) as conn:
             cursor = conn.cursor()
-            cursor.execute("DELETE FROM jobs")
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS jobs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    isbn TEXT,
+                    name TEXT
+                )
+            """)
+            cursor.execute("DELETE FROM jobs WHERE 1=1")
 
+        # Initialize main database
         with get_db_connection(self.db_name) as conn:
             cursor = conn.cursor()
-            cursor.execute("DELETE FROM channels")
-            cursor.execute("DELETE FROM items")
-            cursor.execute("DELETE FROM books")
-            cursor.execute("DELETE FROM technologies")
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS items (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    object_type TEXT NOT NULL,
+                    object_id INTEGER NOT NULL,
+                    UNIQUE(object_type, object_id)
+                )
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS books (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    isbn TEXT UNIQUE NOT NULL,
+                    title TEXT,
+                    author TEXT,
+                    page_count INTEGER,
+                    state TEXT,
+                    type TEXT,
+                    chapter_number INTEGER,
+                    current_chapter INTEGER,
+                    current_page INTEGER
+                )
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS technologies (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT UNIQUE NOT NULL
+                )
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS channels (
+                    channel_id TEXT NOT NULL,
+                    object_id INTEGER UNIQUE NOT NULL
+                )
+            """)
+            cursor.execute("DELETE FROM channels WHERE 1=1")
+            cursor.execute("DELETE FROM items WHERE 1=1")
+            cursor.execute("DELETE FROM books WHERE 1=1")
+            cursor.execute("DELETE FROM technologies WHERE 1=1")
 
         schedule.clear()
 

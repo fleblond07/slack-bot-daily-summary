@@ -1,18 +1,15 @@
 import requests
-import os
 from src.domain import Book, State, Type
-from dotenv import load_dotenv
+from src.constant import GOOGLE_API_URL
 import logging
 
 logger = logging.getLogger("daily_learner")
-
-load_dotenv()
 
 
 def get_book_information(isbn: str) -> Book:
     logger.info(f"Getting book information from Google with {isbn=}")
 
-    google_library_response = requests.get(f"{os.getenv('GOOGLE_API_URL')}isbn:{isbn}")
+    google_library_response = requests.get(f"{GOOGLE_API_URL}isbn:{isbn}")
 
     if google_library_response.status_code == 200 and (
         google_library_response.json().get("totalItems", 0) > 0
@@ -29,9 +26,7 @@ def get_book_information(isbn: str) -> Book:
 def get_book_isbn(book_name: str) -> str:
     logger.info(f"Getting book information from Google with {book_name=}")
 
-    google_library_response = requests.get(
-        f"{os.getenv('GOOGLE_API_URL')}intitle:{book_name}"
-    )
+    google_library_response = requests.get(f"{GOOGLE_API_URL}intitle:{book_name}")
 
     if google_library_response.status_code == 200 and (
         google_library_response.json().get("totalItems", 0) > 0

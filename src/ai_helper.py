@@ -1,15 +1,12 @@
 from typing import TYPE_CHECKING
 from openai import Client, OpenAI
-from dotenv import load_dotenv
+from src.secrets_manager import get_secret
 import logging
 
 logger = logging.getLogger("daily_learner")
 
 if TYPE_CHECKING:
     from tests.test_utils import TestClient
-
-
-load_dotenv()
 
 
 def get_summary_for_book_by_page(
@@ -58,7 +55,7 @@ def get_summary_for_technology(technology_name: str) -> str:
 
 
 def _send_prompt(prompt: str, client: "None | TestClient | Client" = None) -> str:
-    client = client or OpenAI()
+    client = client or OpenAI(api_key=get_secret(key="OPENAI_API_KEY"))
 
     if not prompt:
         raise Exception("Empty prompt was given, aborting before sending request")
