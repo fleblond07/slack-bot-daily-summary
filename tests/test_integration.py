@@ -1,9 +1,8 @@
 from datetime import datetime
 from fastapi.testclient import TestClient
 from unittest.mock import patch
-import os
 from src.db_helper import get_db_connection
-from src.constant import DEFAULT_SCHEDULE_TIME
+from src.constant import DB_NAME, DEFAULT_SCHEDULE_TIME, JOBS_DB_NAME
 import httpx
 import schedule
 from endpoint import app
@@ -16,10 +15,9 @@ client = TestClient(app)
 
 class TestIntegrationTestBookHappyPath:
     def setup_method(self):
-        self.jobs_db_name = os.getenv("JOBS_DB_NAME", "test_jobs.db")
-        self.db_name = os.getenv("DB_NAME", "test_books.db")
+        self.jobs_db_name = JOBS_DB_NAME
+        self.db_name = DB_NAME
 
-        # Initialize jobs database
         with get_db_connection(self.jobs_db_name) as conn:
             cursor = conn.cursor()
             cursor.execute("""
@@ -31,7 +29,6 @@ class TestIntegrationTestBookHappyPath:
             """)
             cursor.execute("DELETE FROM jobs WHERE 1=1")
 
-        # Initialize main database
         with get_db_connection(self.db_name) as conn:
             cursor = conn.cursor()
             cursor.execute("""
@@ -127,10 +124,9 @@ class TestIntegrationTestBookHappyPath:
 
 class TestIntegrationTestTechHappyPath:
     def setup_method(self):
-        self.jobs_db_name = os.getenv("JOBS_DB_NAME", "test_jobs.db")
-        self.db_name = os.getenv("DB_NAME", "test_books.db")
+        self.jobs_db_name = JOBS_DB_NAME
+        self.db_name = DB_NAME
 
-        # Initialize jobs database
         with get_db_connection(self.jobs_db_name) as conn:
             cursor = conn.cursor()
             cursor.execute("""
@@ -142,7 +138,6 @@ class TestIntegrationTestTechHappyPath:
             """)
             cursor.execute("DELETE FROM jobs WHERE 1=1")
 
-        # Initialize main database
         with get_db_connection(self.db_name) as conn:
             cursor = conn.cursor()
             cursor.execute("""
