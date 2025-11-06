@@ -1,5 +1,5 @@
 import responses
-from src.external_helper import (
+from external_helper import (
     _extract_isbn,
     _load_book_from_google,
     get_book_information,

@@ -1,6 +1,6 @@
 import requests
-from src.domain import Book, State, Type
-from src.constant import GOOGLE_API_URL
+from domain import Book, State, Type
+from constant import GOOGLE_API_URL
 import logging
 
 logger = logging.getLogger("daily_learner")

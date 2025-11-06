@@ -3,8 +3,8 @@ from functools import wraps
 from typing import Callable, Awaitable
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from src.slack_helper import verify_slack_request
-from src.secrets_manager import get_debug_mode
+from slack_helper import verify_slack_request
+from secrets_manager import get_debug_mode
 
 logger = logging.getLogger("daily_learner")
 

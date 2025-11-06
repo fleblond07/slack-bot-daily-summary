@@ -1,8 +1,8 @@
 import sqlite3
 from contextlib import contextmanager
-from src.schedule_helper import schedule_jobs
-from src.domain import Book, ObjectType, Technology
-from src.constant import DB_NAME, JOBS_DB_NAME
+from schedule_helper import schedule_jobs
+from domain import Book, ObjectType, Technology
+from constant import DB_NAME, JOBS_DB_NAME
 import schedule
 import logging
 

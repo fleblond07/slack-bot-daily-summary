@@ -4,7 +4,7 @@ import os
 import time
 import hmac
 import hashlib
-from src.slack_helper import (
+from slack_helper import (
     create_channel,
     send_slack_message,
     get_channel_id,
@@ -13,7 +13,7 @@ from src.slack_helper import (
 )
 from tests.test_utils import TestClient
 from unittest.mock import patch
-import src.secrets_manager
+import secrets_manager
 
 
 class TestSendSlackMessage:
@@ -54,7 +54,7 @@ class TestSlackGetChannel:
         assert get_channel_id(object_name="tata", client=TestClient()) == "123456"
 
     def test_get_non_existing_channel_should_create_channel(self):
-        with patch("src.slack_helper.create_channel") as mock_create_channel:
+        with patch("slack_helper.create_channel") as mock_create_channel:
             mock_create_channel.return_value = "890123"
             assert get_channel_id(object_name="Titi", client=TestClient()) == "890123"
 
@@ -62,7 +62,7 @@ class TestSlackGetChannel:
 
     def test_slack_exception_should_raise_exception(self):
         with pytest.raises(Exception):
-            with patch("src.slack_helper.create_channel") as patched:
+            with patch("slack_helper.create_channel") as patched:
                 patched.side_effect = SlackApiError(
                     message="Something didnt go well",
                     response={"error": "This didnt go well"},
@@ -114,7 +114,7 @@ class TestVerifySlackSignature:
         self.secret = os.getenv("SLACK_SIGNING_SECRET", "test_signature")
 
     def teardown_method(self, method):
-        src.secrets_manager._secrets_manager = None
+        secrets_manager._secrets_manager = None
 
     def _generate_signature(self, secret: str, timestamp: str, body: bytes) -> str:
         basestring = f"v0:{timestamp}:{body.decode('utf-8')}"
@@ -150,7 +150,7 @@ class TestVerifySlackSignature:
             def get_secret(self, key: str) -> str:
                 return test_secret
 
-        src.secrets_manager._secrets_manager = MockSecretsManager()
+        secrets_manager._secrets_manager = MockSecretsManager()
 
         assert verify_slack_request(timestamp, bad_sig, body) is False
 
@@ -161,7 +161,7 @@ class TestVerifySlackSignature:
             def get_secret(self, key: str) -> str:
                 return test_secret
 
-        src.secrets_manager._secrets_manager = MockSecretsManager()
+        secrets_manager._secrets_manager = MockSecretsManager()
 
         body = b"hello"
         timestamp = str(int(time.time()))
@@ -178,6 +178,6 @@ class TestVerifySlackSignature:
             def get_secret(self, key: str) -> str | None:
                 return None
 
-        src.secrets_manager._secrets_manager = MockSecretsManager()
+        secrets_manager._secrets_manager = MockSecretsManager()
 
         assert verify_slack_request(timestamp, sig, body) is False

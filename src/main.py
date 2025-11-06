@@ -1,7 +1,7 @@
 import schedule
 from starlette.datastructures import UploadFile
-from src.schedule_helper import schedule_jobs, run_all_jobs, cancel_job_by_isbn
-from src.db_helper import (
+from schedule_helper import schedule_jobs, run_all_jobs, cancel_job_by_isbn
+from db_helper import (
     load_book_by_isbn,
     load_books,
     load_technologies,
@@ -10,15 +10,15 @@ from src.db_helper import (
     write_book_to_db,
     write_technology_to_db,
 )
-from src.ai_helper import (
+from ai_helper import (
     get_summary_for_book_by_chapter,
     get_summary_for_book_by_page,
     get_summary_for_technology,
 )
-from src.domain import Book, ObjectType, State, Technology, Type, Channel
-from src.slack_helper import send_slack_message, get_channel_id
-from src.external_helper import get_book_information, get_book_isbn
-from src.constant import DEFAULT_PAGES_SPLIT
+from domain import Book, ObjectType, State, Technology, Type, Channel
+from slack_helper import send_slack_message, get_channel_id
+from external_helper import get_book_information, get_book_isbn
+from constant import DEFAULT_PAGES_SPLIT
 import logging
 
 logger = logging.getLogger("daily_learner")

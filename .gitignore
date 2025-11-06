@@ -6,3 +6,4 @@ data/*
 .python-version
 *.db-journal
 *.db
+mutants/*

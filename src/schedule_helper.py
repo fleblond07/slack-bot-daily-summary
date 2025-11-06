@@ -1,6 +1,6 @@
 import schedule
-from src.constant import DEFAULT_SCHEDULE_TIME
-from src.domain import Book, Technology
+from constant import DEFAULT_SCHEDULE_TIME
+from domain import Book, Technology
 import logging
 import threading
 
@@ -8,7 +8,7 @@ logger = logging.getLogger("daily_learner")
 
 
 def schedule_jobs(object: Book | Technology | None) -> None:
-    from src.main import send_daily_book_summary, send_daily_tech_summary
+    from main import send_daily_book_summary, send_daily_tech_summary
 
     logger.info(f"Scheduling job for {type(object)}")
 

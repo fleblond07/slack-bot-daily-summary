@@ -19,7 +19,7 @@ repos:
         exclude: ^tests/
       - id: pytest
         name: pytest
-        entry: uv run --extra dev pytest .
+        entry: uv run --extra dev pytest . --cov=. --cov-report=term-missing --cov-config=pyproject.toml
         language: system
         types: [python]
         pass_filenames: false

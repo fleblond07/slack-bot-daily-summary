@@ -1,14 +1,14 @@
 from unittest.mock import patch, MagicMock
-from src.secrets_manager import SecretsManager, get_secrets_manager, get_secret
+from secrets_manager import SecretsManager, get_secrets_manager, get_secret
 
 
 class TestSecretsManagerInitialization:
     def teardown_method(self):
-        import src.secrets_manager
+        import secrets_manager
 
-        src.secrets_manager._secrets_manager = None
+        secrets_manager._secrets_manager = None
 
-    @patch("src.secrets_manager.os.getenv")
+    @patch("secrets_manager.os.getenv")
     def test_initialization_without_doppler_token(self, mock_getenv):
         def getenv_side_effect(key, default=""):
             if key == "DOPPLER_TOKEN":
@@ -25,7 +25,7 @@ class TestSecretsManagerInitialization:
 
         assert manager._doppler_initialized is False
 
-    @patch("src.secrets_manager.os.getenv")
+    @patch("secrets_manager.os.getenv")
     def test_initialization_without_project_or_config(self, mock_getenv):
         def getenv_side_effect(key, default=""):
             if key == "DOPPLER_TOKEN":
@@ -42,8 +42,8 @@ class TestSecretsManagerInitialization:
 
         assert manager._doppler_initialized is False
 
-    @patch("src.secrets_manager.os.getenv")
-    @patch("src.secrets_manager.DopplerSDK")
+    @patch("secrets_manager.os.getenv")
+    @patch("secrets_manager.DopplerSDK")
     def test_initialization_with_doppler_exception(self, mock_sdk, mock_getenv):
         def getenv_side_effect(key, default=""):
             if key == "DOPPLER_TOKEN":
@@ -61,8 +61,8 @@ class TestSecretsManagerInitialization:
 
         assert manager._doppler_initialized is False
 
-    @patch("src.secrets_manager.os.getenv")
-    @patch("src.secrets_manager.DopplerSDK")
+    @patch("secrets_manager.os.getenv")
+    @patch("secrets_manager.DopplerSDK")
     def test_initialization_with_empty_response(self, mock_sdk, mock_getenv):
         def getenv_side_effect(key, default=""):
             if key == "DOPPLER_TOKEN":
@@ -83,8 +83,8 @@ class TestSecretsManagerInitialization:
 
         assert manager._doppler_initialized is False
 
-    @patch("src.secrets_manager.os.getenv")
-    @patch("src.secrets_manager.DopplerSDK")
+    @patch("secrets_manager.os.getenv")
+    @patch("secrets_manager.DopplerSDK")
     def test_initialization_with_falsy_response(self, mock_sdk, mock_getenv):
         def getenv_side_effect(key, default=""):
             if key == "DOPPLER_TOKEN":
@@ -105,8 +105,8 @@ class TestSecretsManagerInitialization:
 
         assert manager._doppler_initialized is False
 
-    @patch("src.secrets_manager.os.getenv")
-    @patch("src.secrets_manager.DopplerSDK")
+    @patch("secrets_manager.os.getenv")
+    @patch("secrets_manager.DopplerSDK")
     def test_successful_doppler_initialization(self, mock_sdk, mock_getenv):
         def getenv_side_effect(key, default=""):
             if key == "DOPPLER_TOKEN":
@@ -133,11 +133,11 @@ class TestSecretsManagerInitialization:
 
 class TestSecretsManagerGetSecret:
     def teardown_method(self):
-        import src.secrets_manager
+        import secrets_manager
 
-        src.secrets_manager._secrets_manager = None
+        secrets_manager._secrets_manager = None
 
-    @patch("src.secrets_manager.os.getenv")
+    @patch("secrets_manager.os.getenv")
     def test_get_secret_when_doppler_not_initialized(self, mock_getenv):
         def getenv_side_effect(key, default=""):
             return ""
@@ -149,8 +149,8 @@ class TestSecretsManagerGetSecret:
 
         assert result is None
 
-    @patch("src.secrets_manager.os.getenv")
-    @patch("src.secrets_manager.DopplerSDK")
+    @patch("secrets_manager.os.getenv")
+    @patch("secrets_manager.DopplerSDK")
     def test_get_from_doppler_not_initialized(self, mock_sdk, mock_getenv):
         def getenv_side_effect(key, default=""):
             if key == "DOPPLER_TOKEN":
@@ -177,8 +177,8 @@ class TestSecretsManagerGetSecret:
 
         assert result is None
 
-    @patch("src.secrets_manager.os.getenv")
-    @patch("src.secrets_manager.DopplerSDK")
+    @patch("secrets_manager.os.getenv")
+    @patch("secrets_manager.DopplerSDK")
     def test_get_secret_successfully_from_doppler(self, mock_sdk, mock_getenv):
         def getenv_side_effect(key, default=""):
             if key == "DOPPLER_TOKEN":
@@ -203,8 +203,8 @@ class TestSecretsManagerGetSecret:
 
         assert result == "test_value"
 
-    @patch("src.secrets_manager.os.getenv")
-    @patch("src.secrets_manager.DopplerSDK")
+    @patch("secrets_manager.os.getenv")
+    @patch("secrets_manager.DopplerSDK")
     def test_get_secret_with_caching(self, mock_sdk, mock_getenv):
         def getenv_side_effect(key, default=""):
             if key == "DOPPLER_TOKEN":
@@ -234,8 +234,8 @@ class TestSecretsManagerGetSecret:
 
         assert mock_client.secrets.list.call_count == 1
 
-    @patch("src.secrets_manager.os.getenv")
-    @patch("src.secrets_manager.DopplerSDK")
+    @patch("secrets_manager.os.getenv")
+    @patch("secrets_manager.DopplerSDK")
     def test_get_secret_not_found_in_doppler(self, mock_sdk, mock_getenv):
         def getenv_side_effect(key, default=""):
             if key == "DOPPLER_TOKEN":
@@ -260,8 +260,8 @@ class TestSecretsManagerGetSecret:
 
         assert result is None
 
-    @patch("src.secrets_manager.os.getenv")
-    @patch("src.secrets_manager.DopplerSDK")
+    @patch("secrets_manager.os.getenv")
+    @patch("secrets_manager.DopplerSDK")
     def test_get_secret_with_exception(self, mock_sdk, mock_getenv):
         def getenv_side_effect(key, default=""):
             if key == "DOPPLER_TOKEN":
@@ -289,8 +289,8 @@ class TestSecretsManagerGetSecret:
 
         assert result is None
 
-    @patch("src.secrets_manager.os.getenv")
-    @patch("src.secrets_manager.DopplerSDK")
+    @patch("secrets_manager.os.getenv")
+    @patch("secrets_manager.DopplerSDK")
     def test_get_from_doppler_with_exception_in_fetch(self, mock_sdk, mock_getenv):
         def getenv_side_effect(key, default=""):
             if key == "DOPPLER_TOKEN":
@@ -318,8 +318,8 @@ class TestSecretsManagerGetSecret:
 
         assert result is None
 
-    @patch("src.secrets_manager.os.getenv")
-    @patch("src.secrets_manager.DopplerSDK")
+    @patch("secrets_manager.os.getenv")
+    @patch("secrets_manager.DopplerSDK")
     def test_get_from_doppler_with_cache_exception(self, mock_sdk, mock_getenv):
         def getenv_side_effect(key, default=""):
             if key == "DOPPLER_TOKEN":
@@ -352,11 +352,11 @@ class TestSecretsManagerGetSecret:
 
 class TestModuleLevelFunctions:
     def teardown_method(self):
-        import src.secrets_manager
+        import secrets_manager
 
-        src.secrets_manager._secrets_manager = None
+        secrets_manager._secrets_manager = None
 
-    @patch("src.secrets_manager.os.getenv")
+    @patch("secrets_manager.os.getenv")
     def test_get_secrets_manager_singleton(self, mock_getenv):
         def getenv_side_effect(key, default=""):
             return ""
@@ -368,8 +368,8 @@ class TestModuleLevelFunctions:
 
         assert manager1 is manager2
 
-    @patch("src.secrets_manager.os.getenv")
-    @patch("src.secrets_manager.DopplerSDK")
+    @patch("secrets_manager.os.getenv")
+    @patch("secrets_manager.DopplerSDK")
     def test_get_secret_module_function(self, mock_sdk, mock_getenv):
         def getenv_side_effect(key, default=""):
             if key == "DOPPLER_TOKEN":
@@ -396,86 +396,86 @@ class TestModuleLevelFunctions:
 
 class TestHelperFunctions:
     def teardown_method(self):
-        import src.secrets_manager
+        import secrets_manager
 
-        src.secrets_manager._secrets_manager = None
+        secrets_manager._secrets_manager = None
 
-    @patch("src.secrets_manager.get_secret")
+    @patch("secrets_manager.get_secret")
     def test_get_debug_mode_true_lowercase(self, mock_get_secret):
         mock_get_secret.return_value = "true"
-        from src.secrets_manager import get_debug_mode
+        from secrets_manager import get_debug_mode
 
         result = get_debug_mode()
         assert result is True
 
-    @patch("src.secrets_manager.get_secret")
+    @patch("secrets_manager.get_secret")
     def test_get_debug_mode_true_uppercase(self, mock_get_secret):
         mock_get_secret.return_value = "TRUE"
-        from src.secrets_manager import get_debug_mode
+        from secrets_manager import get_debug_mode
 
         result = get_debug_mode()
         assert result is True
 
-    @patch("src.secrets_manager.get_secret")
+    @patch("secrets_manager.get_secret")
     def test_get_debug_mode_one(self, mock_get_secret):
         mock_get_secret.return_value = "1"
-        from src.secrets_manager import get_debug_mode
+        from secrets_manager import get_debug_mode
 
         result = get_debug_mode()
         assert result is True
 
-    @patch("src.secrets_manager.get_secret")
+    @patch("secrets_manager.get_secret")
     def test_get_debug_mode_yes(self, mock_get_secret):
         mock_get_secret.return_value = "yes"
-        from src.secrets_manager import get_debug_mode
+        from secrets_manager import get_debug_mode
 
         result = get_debug_mode()
         assert result is True
 
-    @patch("src.secrets_manager.get_secret")
+    @patch("secrets_manager.get_secret")
     def test_get_debug_mode_false(self, mock_get_secret):
         mock_get_secret.return_value = "false"
-        from src.secrets_manager import get_debug_mode
+        from secrets_manager import get_debug_mode
 
         result = get_debug_mode()
         assert result is False
 
-    @patch("src.secrets_manager.get_secret")
+    @patch("secrets_manager.get_secret")
     def test_get_debug_mode_none(self, mock_get_secret):
         mock_get_secret.return_value = None
-        from src.secrets_manager import get_debug_mode
+        from secrets_manager import get_debug_mode
 
         result = get_debug_mode()
         assert result is False
 
-    @patch("src.secrets_manager.get_secret")
+    @patch("secrets_manager.get_secret")
     def test_get_debug_mode_random_string(self, mock_get_secret):
         mock_get_secret.return_value = "random"
-        from src.secrets_manager import get_debug_mode
+        from secrets_manager import get_debug_mode
 
         result = get_debug_mode()
         assert result is False
 
-    @patch("src.secrets_manager.get_secret")
+    @patch("secrets_manager.get_secret")
     def test_get_log_level_with_value(self, mock_get_secret):
         mock_get_secret.return_value = "DEBUG"
-        from src.secrets_manager import get_log_level
+        from secrets_manager import get_log_level
 
         result = get_log_level()
         assert result == "DEBUG"
 
-    @patch("src.secrets_manager.get_secret")
+    @patch("secrets_manager.get_secret")
     def test_get_log_level_none(self, mock_get_secret):
         mock_get_secret.return_value = None
-        from src.secrets_manager import get_log_level
+        from secrets_manager import get_log_level
 
         result = get_log_level()
         assert result == "INFO"
 
-    @patch("src.secrets_manager.get_secret")
+    @patch("secrets_manager.get_secret")
     def test_get_log_level_empty_string(self, mock_get_secret):
         mock_get_secret.return_value = ""
-        from src.secrets_manager import get_log_level
+        from secrets_manager import get_log_level
 
         result = get_log_level()
         assert result == "INFO"

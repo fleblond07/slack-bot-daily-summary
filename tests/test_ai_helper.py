@@ -1,4 +1,4 @@
-from src.ai_helper import (
+from ai_helper import (
     _send_prompt,
     get_summary_for_book_by_chapter,
     get_summary_for_book_by_page,
@@ -28,7 +28,7 @@ class TestAiHelper:
     def test_get_summary_for_book_by_chapter_should_call_a_correct_prompt(self):
         expected_prompt = "Please make a summary of the chapter 3 of the book MyTest by John - This summary should be detailed, it should be able to be read in under five minutes - Please refrain from using emojis etc.. use slack-flavored markdown for headers and highlighting the important words, phrases. Also I want your answer to ONLY CONTAIN THE SUMMARY, nothing else no hello or bye or question JUST the summary"
 
-        with patch("src.ai_helper._send_prompt") as mock_send_prompt:
+        with patch("ai_helper._send_prompt") as mock_send_prompt:
             mock_send_prompt.return_value = "TEST OK"
 
             get_summary_for_book_by_chapter("MyTest", "John", 3)
@@ -69,7 +69,7 @@ class TestAiHelper:
     def test_get_summary_for_book_by_page_should_call_a_correct_prompt(self):
         expected_prompt = "Please make a summary of the pages 23 to 32 for the book MyBook by John - This summary can be detailed, it should be able to be read in under five minutes - Please refrain from using emojis etc.. Only use headings if necessary, highlight the important words, phrases. Also I want your answer to ONLY CONTAIN THE SUMMARY, nothing else no hello or bye or question JUST the summary"
 
-        with patch("src.ai_helper._send_prompt") as mock_send_prompt:
+        with patch("ai_helper._send_prompt") as mock_send_prompt:
             mock_send_prompt.return_value = "TEST OK"
 
             get_summary_for_book_by_page("MyBook", "John", 32, 23)
@@ -79,7 +79,7 @@ class TestAiHelper:
     def test_get_tips_for_technology_should_call_the_correct_prompt(self):
         expected_prompt = "Please give me a tip or trick for using technology: SQLAlchemy - This tip or trick should be detailed with code example when necessary, Please refrain from using emojis etc.. use slack-flavored markdown for headers and highlighting the importan words, phrases. Also I want you answer to ONLY CONTAIN THE TIPS OR TRICKS, nothing else no hello or by or question JUST the tip"
 
-        with patch("src.ai_helper._send_prompt") as mock_send_prompt:
+        with patch("ai_helper._send_prompt") as mock_send_prompt:
             mock_send_prompt.return_value = "TEST OK"
 
             get_summary_for_technology("SQLAlchemy")

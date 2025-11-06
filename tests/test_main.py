@@ -1,13 +1,13 @@
 from unittest.mock import MagicMock
 import schedule
 from dotenv import load_dotenv
-from src.domain import Book, Channel, State, Technology, Type
+from domain import Book, Channel, State, Technology, Type
 from tests.test_utils import (
     default_book_per_page_from_google,
     default_finished_book_per_page_from_google,
     default_technology,
 )
-from src.main import (
+from main import (
     _get_pages_for_summary,
     create_book,
     create_technology,
@@ -42,9 +42,9 @@ class TestGetPagesSummary:
 
 
 class TestSendDailySummary:
-    @patch("src.main.send_slack_message")
-    @patch("src.main.get_summary_for_book_by_chapter")
-    @patch("src.main.write_book_to_db")
+    @patch("main.send_slack_message")
+    @patch("main.get_summary_for_book_by_chapter")
+    @patch("main.write_book_to_db")
     def test_by_chapter_book_happy_path(
         self, mock_write_db, mock_get_summary, mock_send_slack
     ):
@@ -70,9 +70,9 @@ class TestSendDailySummary:
         assert book.current_chapter == 2
         assert book.state != State.FINISHED
 
-    @patch("src.main.send_slack_message")
-    @patch("src.main.get_summary_for_book_by_chapter")
-    @patch("src.main.write_book_to_db")
+    @patch("main.send_slack_message")
+    @patch("main.get_summary_for_book_by_chapter")
+    @patch("main.write_book_to_db")
     def test_by_chapter_book_last_chapter(
         self, mock_write_db, mock_get_summary, mock_send_slack
     ):
@@ -97,10 +97,10 @@ class TestSendDailySummary:
         mock_send_slack.assert_any_call("C123", final_message)
         assert book.state == State.FINISHED
 
-    @patch("src.main.send_slack_message")
-    @patch("src.main.get_summary_for_book_by_page")
-    @patch("src.main._get_pages_for_summary")
-    @patch("src.main.write_book_to_db")
+    @patch("main.send_slack_message")
+    @patch("main.get_summary_for_book_by_page")
+    @patch("main._get_pages_for_summary")
+    @patch("main.write_book_to_db")
     def test_by_page_book_happy_path(
         self, mock_write_db, mock_get_pages, mock_get_summary, mock_send_slack
     ):
@@ -127,10 +127,10 @@ class TestSendDailySummary:
         assert book.current_page == 10
         assert book.state != State.FINISHED
 
-    @patch("src.main.send_slack_message")
-    @patch("src.main.get_summary_for_book_by_page")
-    @patch("src.main._get_pages_for_summary")
-    @patch("src.main.write_book_to_db")
+    @patch("main.send_slack_message")
+    @patch("main.get_summary_for_book_by_page")
+    @patch("main._get_pages_for_summary")
+    @patch("main.write_book_to_db")
     def test_by_page_book_last_page(
         self, mock_write_db, mock_get_pages, mock_get_summary, mock_send_slack
     ):
@@ -155,7 +155,7 @@ class TestSendDailySummary:
         mock_send_slack.assert_any_call("C123", final_message)
         assert book.state == State.FINISHED
 
-    @patch("src.main.get_summary_for_book_by_chapter")
+    @patch("main.get_summary_for_book_by_chapter")
     def test_summary_returns_none_should_raise_exception(self, mock_get_summary):
         mock_get_summary.return_value = None
 
@@ -196,8 +196,8 @@ class TestSendDailySummary:
 
         assert "Unknown book type" in str(exc.value)
 
-    @patch("src.main.send_slack_message")
-    @patch("src.main.get_summary_for_technology")
+    @patch("main.send_slack_message")
+    @patch("main.get_summary_for_technology")
     def test_send_daily_tech_summary_success(self, mock_get_summary, mock_send_slack):
         mock_get_summary.return_value = "Some useful tech tips!"
         tech = Technology(name="Python", channel_id="C456")
@@ -207,8 +207,8 @@ class TestSendDailySummary:
         mock_get_summary.assert_called_once_with("Python")
         mock_send_slack.assert_called_once_with("C456", "Some useful tech tips!")
 
-    @patch("src.main.send_slack_message")
-    @patch("src.main.get_summary_for_technology")
+    @patch("main.send_slack_message")
+    @patch("main.get_summary_for_technology")
     def test_send_daily_tech_summary_no_summary(
         self, mock_get_summary, mock_send_slack
     ):
@@ -227,7 +227,7 @@ class TestCreateTechnology:
     def setup_method(self):
         self.existing_tech = Technology(name="Python", channel_id="C123")
 
-    @patch("src.main.load_technology_by_name")
+    @patch("main.load_technology_by_name")
     def test_technology_already_exists_should_return_it(self, mock_load):
         mock_load.return_value = self.existing_tech
 
@@ -236,9 +236,9 @@ class TestCreateTechnology:
         assert tech is self.existing_tech
         mock_load.assert_called_once_with(technology_name="Python")
 
-    @patch("src.main.write_technology_to_db")
-    @patch("src.main.get_channel_id")
-    @patch("src.main.load_technology_by_name")
+    @patch("main.write_technology_to_db")
+    @patch("main.get_channel_id")
+    @patch("main.load_technology_by_name")
     def test_new_technology_should_be_created(
         self, mock_load, mock_get_channel_id, mock_write_db
     ):
@@ -259,7 +259,7 @@ class TestCreateBook:
         self.on_going_book = default_book_per_page_from_google
         self.finished_book = default_finished_book_per_page_from_google
 
-    @patch("src.main.get_book_isbn")
+    @patch("main.get_book_isbn")
     def test_no_isbn_should_raise_exception(self, mock_get_isbn):
         mock_get_isbn.return_value = None
 
@@ -268,8 +268,8 @@ class TestCreateBook:
 
         assert "Cannot find ISBN" in str(exc.value)
 
-    @patch("src.main.get_book_isbn")
-    @patch("src.main.load_book_by_isbn")
+    @patch("main.get_book_isbn")
+    @patch("main.load_book_by_isbn")
     def test_book_already_finished_should_raise_exception(
         self, mock_load_book, mock_get_isbn
     ):
@@ -284,8 +284,8 @@ class TestCreateBook:
             in str(exc.value)
         )
 
-    @patch("src.main.get_book_isbn")
-    @patch("src.main.load_book_by_isbn")
+    @patch("main.get_book_isbn")
+    @patch("main.load_book_by_isbn")
     def test_book_already_exists_and_not_finished_should_return_book(
         self, mock_load_book, mock_get_isbn
     ):
@@ -297,11 +297,11 @@ class TestCreateBook:
         assert book is self.on_going_book
         assert msg == ""
 
-    @patch("src.main.write_book_to_db")
-    @patch("src.main.get_channel_id")
-    @patch("src.main.get_book_information")
-    @patch("src.main.load_book_by_isbn")
-    @patch("src.main.get_book_isbn")
+    @patch("main.write_book_to_db")
+    @patch("main.get_channel_id")
+    @patch("main.get_book_information")
+    @patch("main.load_book_by_isbn")
+    @patch("main.get_book_isbn")
     def test_new_book_created_and_written_to_db(
         self,
         mock_get_isbn,
@@ -332,7 +332,7 @@ class TestHandleTipsCommand:
 
         assert "technology_name is required" in str(exc.value)
 
-    @patch("src.main.create_technology")
+    @patch("main.create_technology")
     def test_create_technology_returns_none_should_return_error_string(
         self, mock_create
     ):
@@ -342,9 +342,9 @@ class TestHandleTipsCommand:
 
         assert result == "An error occurred while registering the technology"
 
-    @patch("src.main.save_jobs")
-    @patch("src.main.schedule_jobs")
-    @patch("src.main.create_technology")
+    @patch("main.save_jobs")
+    @patch("main.schedule_jobs")
+    @patch("main.create_technology")
     def test_create_technology_returns_valid_technology(
         self, mock_create, mock_schedule, mock_save
     ):
@@ -367,15 +367,15 @@ class TestHandleReadmeCommand:
             handle_readme_command(None)
         assert "book_name is required" in str(exc.value)
 
-    @patch("src.main.create_book")
+    @patch("main.create_book")
     def test_create_book_returns_error_string(self, mock_create):
         mock_create.return_value = (None, "some error")
 
         result = handle_readme_command("MyBook")
         assert result == "some error"
 
-    @patch("src.main.save_jobs")
-    @patch("src.main.create_book")
+    @patch("main.save_jobs")
+    @patch("main.create_book")
     def test_create_book_returns_valid_book(self, mock_create, mock_schedule):
         book = default_book_per_page_from_google
         mock_create.return_value = (book, "")
@@ -389,7 +389,7 @@ class TestHandleReadmeCommand:
             == f"{book.title} will be summarized for you everyday a new chapter at 9am on channel <#{book.channel_id}>"
         )
 
-    @patch("src.main.create_book")
+    @patch("main.create_book")
     def test_create_book_returns_none_book(self, mock_create):
         mock_create.return_value = (None, "")
 
@@ -398,7 +398,7 @@ class TestHandleReadmeCommand:
 
 
 class TestHandleListCommand:
-    @patch("src.main.get_all_channel")
+    @patch("main.get_all_channel")
     def test_no_channels_should_return_empty_list(self, mock_get_channels):
         mock_get_channels.return_value = []
 
@@ -406,7 +406,7 @@ class TestHandleListCommand:
         assert "Channels I created:" in result
         assert "Current schedule:" in result
 
-    @patch("src.main.get_all_channel")
+    @patch("main.get_all_channel")
     def test_channels_no_jobs(self, mock_get_channels):
         schedule.clear()
         mock_get_channels.return_value = [
@@ -422,7 +422,7 @@ class TestHandleListCommand:
         assert "Current schedule:" in result
         assert result.strip().endswith("Current schedule:")
 
-    @patch("src.main.get_all_channel")
+    @patch("main.get_all_channel")
     def test_channels_with_jobs(self, mock_get_channels):
         mock_get_channels.return_value = [
             Channel(channel_id="C123", name="My Book"),
@@ -447,8 +447,8 @@ class TestHandleListCommand:
 
 
 class TestGetAllChannel:
-    @patch("src.main.load_books")
-    @patch("src.main.load_technologies")
+    @patch("main.load_books")
+    @patch("main.load_technologies")
     def test_no_books_should_return_empty_list(self, mock_load_techs, mock_load_books):
         mock_load_books.return_value = []
         mock_load_techs.return_value = []
@@ -456,7 +456,7 @@ class TestGetAllChannel:
         result = get_all_channel()
         assert result == []
 
-    @patch("src.main.load_books")
+    @patch("main.load_books")
     def test_books_should_return_channel_objects(self, mock_load_books):
         book1 = default_book_per_page_from_google
         book2 = default_finished_book_per_page_from_google
@@ -475,7 +475,7 @@ class TestGetAllChannel:
 
 
 class TestHandleRunCommand:
-    @patch("src.main.run_all_jobs")
+    @patch("main.run_all_jobs")
     def test_handle_run_command(self, mock_run_all_job: MagicMock):
         assert handle_run_command() == "I have succesfully started all scheduled jobs"
         mock_run_all_job.assert_called_once()

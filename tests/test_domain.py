@@ -1,4 +1,4 @@
-from src.domain import Book, Channel, ChannelList, Technology, Type
+from domain import Book, Channel, ChannelList, Technology, Type
 from tests.test_utils import (
     default_book_per_page,
     default_dict_from_json,

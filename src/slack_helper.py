@@ -9,8 +9,8 @@ import hmac
 import hashlib
 import unicodedata
 
-from src.constant import MARKDOWN_RULES, SLACK_TIMESTAMP_MAX_AGE_SECONDS
-from src.secrets_manager import get_secret
+from constant import MARKDOWN_RULES, SLACK_TIMESTAMP_MAX_AGE_SECONDS
+from secrets_manager import get_secret
 import logging
 
 logger = logging.getLogger("daily_learner")

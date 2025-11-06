@@ -4,16 +4,16 @@ from contextlib import asynccontextmanager
 import schedule
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from src.secrets_manager import SecretsManager, get_log_level
-from src.db_helper import load_jobs, reset_jobs
-from src.main import (
+from secrets_manager import SecretsManager, get_log_level
+from db_helper import load_jobs, reset_jobs
+from main import (
     handle_list_command,
     handle_readme_command,
     handle_tips_command,
     handle_run_command,
 )
-from src.decorators import require_slack_verification
-from src.constant import SCHEDULER_CHECK_INTERVAL_SECONDS
+from decorators import require_slack_verification
+from constant import SCHEDULER_CHECK_INTERVAL_SECONDS
 import logging
 import logging.config
 

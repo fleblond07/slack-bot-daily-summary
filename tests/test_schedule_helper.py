@@ -3,8 +3,8 @@ import pytest
 from unittest.mock import MagicMock, patch
 
 from datetime import datetime
-from src.constant import DEFAULT_SCHEDULE_TIME
-from src.schedule_helper import (
+from constant import DEFAULT_SCHEDULE_TIME
+from schedule_helper import (
     schedule_jobs,
     run_all_jobs,
     cancel_job_by_isbn,
@@ -22,7 +22,7 @@ class TestScheduleJobs:
             schedule_jobs(None)
 
     def test_schedules_job_when_book_provided(self):
-        from src.main import send_daily_book_summary
+        from main import send_daily_book_summary
 
         book = default_book_per_page
         schedule_jobs(book)
@@ -37,8 +37,8 @@ class TestScheduleJobs:
 
 
 class TestRunJobs:
-    @patch("src.schedule_helper.threading.Thread")
-    @patch("src.schedule_helper.schedule.run_all")
+    @patch("schedule_helper.threading.Thread")
+    @patch("schedule_helper.schedule.run_all")
     def test_run_all_jobs_starts_thread(
         self, mock_run_all: MagicMock, mock_thread_class: MagicMock
     ):
@@ -58,7 +58,7 @@ class TestCancelJobByIsbn:
         schedule.clear()
 
     def test_cancels_job_when_isbn_found(self):
-        from src.main import send_daily_book_summary
+        from main import send_daily_book_summary
 
         book = default_book_per_page
         schedule.every().day.at(DEFAULT_SCHEDULE_TIME).do(send_daily_book_summary, book)
@@ -76,8 +76,9 @@ class TestCancelJobByName:
     def setup_method(self):
         schedule.clear()
 
-    def test_cancels_job_when_name_found(self):
-        from src.main import send_daily_tech_summary
+    @patch("schedule_helper.logger")
+    def test_cancels_job_when_name_found(self, mock_logger: MagicMock):
+        from main import send_daily_tech_summary
 
         tech = default_technology
         schedule.every().day.at(DEFAULT_SCHEDULE_TIME).do(send_daily_tech_summary, tech)
@@ -85,6 +86,11 @@ class TestCancelJobByName:
         assert len(schedule.jobs) == 1
         cancel_job_by_name(tech.name)
         assert len(schedule.jobs) == 0
+
+        mock_logger.info.assert_any_call(
+            f"Attempting to cancel job for name={tech.name!r}"
+        )
+        mock_logger.info.assert_any_call(f"Canceling job for name={tech.name!r}")
 
     def test_does_not_crash_when_name_not_found(self):
         cancel_job_by_name("non-existent-tech")

@@ -1,5 +1,5 @@
-from src.main import send_daily_book_summary, send_daily_tech_summary
-from src.db_helper import (
+from main import send_daily_book_summary, send_daily_tech_summary
+from db_helper import (
     load_book_by_isbn,
     load_books,
     load_jobs,
@@ -10,7 +10,7 @@ from src.db_helper import (
     write_technology_to_db,
     get_db_connection,
 )
-from src.constant import DB_NAME, JOBS_DB_NAME
+from constant import DB_NAME, JOBS_DB_NAME
 from tests.test_utils import (
     default_dict_from_json,
     default_technology,

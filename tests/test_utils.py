@@ -1,5 +1,5 @@
-from src.domain import Book, ObjectType, State, Technology, Type
-from src.constant import GOOGLE_API_URL
+from domain import Book, ObjectType, State, Technology, Type
+from constant import GOOGLE_API_URL
 import responses
 from dotenv import load_dotenv
 

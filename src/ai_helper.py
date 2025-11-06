@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 from openai import Client, OpenAI
-from src.secrets_manager import get_secret
+from secrets_manager import get_secret
 import logging
 
 logger = logging.getLogger("daily_learner")

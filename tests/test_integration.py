@@ -1,12 +1,12 @@
 from datetime import datetime
 from fastapi.testclient import TestClient
 from unittest.mock import patch
-from src.db_helper import get_db_connection
-from src.constant import DB_NAME, DEFAULT_SCHEDULE_TIME, JOBS_DB_NAME
+from db_helper import get_db_connection
+from constant import DB_NAME, DEFAULT_SCHEDULE_TIME, JOBS_DB_NAME
 import httpx
 import schedule
 from endpoint import app
-from src.main import send_daily_book_summary, send_daily_tech_summary
+from main import send_daily_book_summary, send_daily_tech_summary
 from tests.test_utils import default_book_for_integration, default_tech_for_integation
 
 
@@ -72,12 +72,12 @@ class TestIntegrationTestBookHappyPath:
 
         schedule.clear()
 
-    @patch("src.main.get_channel_id")
-    @patch("src.main.get_book_information")
-    @patch("src.decorators.verify_slack_request")
-    @patch("src.main.get_book_isbn")
-    @patch("src.ai_helper._send_prompt")
-    @patch("src.main.send_slack_message")
+    @patch("main.get_channel_id")
+    @patch("main.get_book_information")
+    @patch("decorators.verify_slack_request")
+    @patch("main.get_book_isbn")
+    @patch("ai_helper._send_prompt")
+    @patch("main.send_slack_message")
     def test_integration_book_happy_path(
         self,
         mock_send_slack,
@@ -181,10 +181,10 @@ class TestIntegrationTestTechHappyPath:
 
         schedule.clear()
 
-    @patch("src.main.get_channel_id")
-    @patch("src.decorators.verify_slack_request")
-    @patch("src.ai_helper._send_prompt")
-    @patch("src.main.send_slack_message")
+    @patch("main.get_channel_id")
+    @patch("decorators.verify_slack_request")
+    @patch("ai_helper._send_prompt")
+    @patch("main.send_slack_message")
     def test_integration_tech_happy_path(
         self,
         mock_send_slack,
