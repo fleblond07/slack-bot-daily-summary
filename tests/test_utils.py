@@ -111,22 +111,32 @@ default_dict_from_json = {
     "current_chapter": 0,
     "current_page": 0,
     "channel_id": "123456",
+    "email": "",
+    "notification_channel": "slack",
 }
 
 default_technology_from_json = {
     "name": "SQLAlchemy",
     "object_type": "tech",
     "channel_id": "123456",
+    "email": "",
+    "notification_channel": "slack",
 }
 
 default_technology = Technology(
-    name="SQLAlchemy", channel_id="123456", object_type=ObjectType.TECH
+    name="SQLAlchemy",
+    channel_id="123456",
+    object_type=ObjectType.TECH,
+    email="",
+    notification_channel="slack",
 )
 
 second_technology_from_json = {
     "name": "Python",
     "object_type": "tech",
     "channel_id": "7891011",
+    "email": "",
+    "notification_channel": "slack",
 }
 
 second_book_json = {
@@ -141,6 +151,8 @@ second_book_json = {
     "current_chapter": 0,
     "current_page": 0,
     "channel_id": "78910",
+    "email": "",
+    "notification_channel": "slack",
 }
 
 google_json_response = {

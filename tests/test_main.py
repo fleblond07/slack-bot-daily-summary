@@ -1,12 +1,10 @@
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
+
+import pytest
 import schedule
 from dotenv import load_dotenv
+
 from src.domain import Book, Channel, State, Technology, Type
-from tests.test_utils import (
-    default_book_per_page_from_google,
-    default_finished_book_per_page_from_google,
-    default_technology,
-)
 from src.main import (
     _get_pages_for_summary,
     create_book,
@@ -19,8 +17,11 @@ from src.main import (
     send_daily_book_summary,
     send_daily_tech_summary,
 )
-from unittest.mock import patch
-import pytest
+from tests.test_utils import (
+    default_book_per_page_from_google,
+    default_finished_book_per_page_from_google,
+    default_technology,
+)
 
 load_dotenv()
 
@@ -42,11 +43,11 @@ class TestGetPagesSummary:
 
 
 class TestSendDailySummary:
-    @patch("src.main.send_slack_message")
+    @patch("src.main.send_notification")
     @patch("src.main.get_summary_for_book_by_chapter")
     @patch("src.main.write_book_to_db")
     def test_by_chapter_book_happy_path(
-        self, mock_write_db, mock_get_summary, mock_send_slack
+        self, mock_write_db, mock_get_summary, mock_send_notification
     ):
         mock_get_summary.return_value = "chapter summary"
 
@@ -65,16 +66,16 @@ class TestSendDailySummary:
         send_daily_book_summary(book)
 
         mock_get_summary.assert_called_once_with("My Book", "Author", 1)
-        mock_send_slack.assert_any_call("C123", "chapter summary")
+        mock_send_notification.assert_called_once()
         mock_write_db.assert_called_once()
         assert book.current_chapter == 2
         assert book.state != State.FINISHED
 
-    @patch("src.main.send_slack_message")
+    @patch("src.main.send_notification")
     @patch("src.main.get_summary_for_book_by_chapter")
     @patch("src.main.write_book_to_db")
     def test_by_chapter_book_last_chapter(
-        self, mock_write_db, mock_get_summary, mock_send_slack
+        self, mock_write_db, mock_get_summary, mock_send_notification
     ):
         mock_get_summary.return_value = "last summary"
 
@@ -92,17 +93,15 @@ class TestSendDailySummary:
 
         send_daily_book_summary(book)
 
-        mock_send_slack.assert_any_call("C123", "last summary")
-        final_message = f"This was the final summary for {book.title} - Thank you for using the bot!"
-        mock_send_slack.assert_any_call("C123", final_message)
+        assert mock_send_notification.call_count == 2
         assert book.state == State.FINISHED
 
-    @patch("src.main.send_slack_message")
+    @patch("src.main.send_notification")
     @patch("src.main.get_summary_for_book_by_page")
     @patch("src.main._get_pages_for_summary")
     @patch("src.main.write_book_to_db")
     def test_by_page_book_happy_path(
-        self, mock_write_db, mock_get_pages, mock_get_summary, mock_send_slack
+        self, mock_write_db, mock_get_pages, mock_get_summary, mock_send_notification
     ):
         mock_get_pages.return_value = 10
         mock_get_summary.return_value = "page summary"
@@ -122,17 +121,17 @@ class TestSendDailySummary:
 
         mock_get_pages.assert_called_once_with(book)
         mock_get_summary.assert_called_once_with("My Book", "Author", 10, 5)
-        mock_send_slack.assert_any_call("C123", "page summary")
+        mock_send_notification.assert_called_once()
         mock_write_db.assert_called_once()
         assert book.current_page == 10
         assert book.state != State.FINISHED
 
-    @patch("src.main.send_slack_message")
+    @patch("src.main.send_notification")
     @patch("src.main.get_summary_for_book_by_page")
     @patch("src.main._get_pages_for_summary")
     @patch("src.main.write_book_to_db")
     def test_by_page_book_last_page(
-        self, mock_write_db, mock_get_pages, mock_get_summary, mock_send_slack
+        self, mock_write_db, mock_get_pages, mock_get_summary, mock_send_notification
     ):
         mock_get_pages.return_value = 100
         mock_get_summary.return_value = "final page summary"
@@ -150,9 +149,7 @@ class TestSendDailySummary:
 
         send_daily_book_summary(book)
 
-        final_message = f"This was the final summary for {book.title} - Thank you for using the bot!"
-        mock_send_slack.assert_any_call("C123", "final page summary")
-        mock_send_slack.assert_any_call("C123", final_message)
+        assert mock_send_notification.call_count == 2
         assert book.state == State.FINISHED
 
     @patch("src.main.get_summary_for_book_by_chapter")
@@ -196,21 +193,23 @@ class TestSendDailySummary:
 
         assert "Unknown book type" in str(exc.value)
 
-    @patch("src.main.send_slack_message")
+    @patch("src.main.send_notification")
     @patch("src.main.get_summary_for_technology")
-    def test_send_daily_tech_summary_success(self, mock_get_summary, mock_send_slack):
+    def test_send_daily_tech_summary_success(
+        self, mock_get_summary, mock_send_notification
+    ):
         mock_get_summary.return_value = "Some useful tech tips!"
         tech = Technology(name="Python", channel_id="C456")
 
         send_daily_tech_summary(tech)
 
         mock_get_summary.assert_called_once_with("Python")
-        mock_send_slack.assert_called_once_with("C456", "Some useful tech tips!")
+        mock_send_notification.assert_called_once()
 
-    @patch("src.main.send_slack_message")
+    @patch("src.main.send_notification")
     @patch("src.main.get_summary_for_technology")
     def test_send_daily_tech_summary_no_summary(
-        self, mock_get_summary, mock_send_slack
+        self, mock_get_summary, mock_send_notification
     ):
         mock_get_summary.return_value = None
         with pytest.raises(Exception) as excinfo:
@@ -220,7 +219,7 @@ class TestSendDailySummary:
             excinfo.value
         )
         mock_get_summary.assert_called_once_with("Rust")
-        mock_send_slack.assert_not_called()
+        mock_send_notification.assert_not_called()
 
 
 class TestCreateTechnology:

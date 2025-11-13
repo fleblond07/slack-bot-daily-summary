@@ -55,6 +55,8 @@ class Technology:
     name: str
     channel_id: str = ""
     object_type: ObjectType = ObjectType.TECH
+    email: str = ""
+    notification_channel: str = "slack"
 
     @staticmethod
     def to_json(technology: "Technology") -> dict:
@@ -62,6 +64,8 @@ class Technology:
             "name": technology.name,
             "channel_id": technology.channel_id,
             "object_type": "tech",
+            "email": technology.email,
+            "notification_channel": technology.notification_channel,
         }
 
     @staticmethod
@@ -70,6 +74,8 @@ class Technology:
             name=technology.get("name", ""),
             channel_id=technology.get("channel_id", ""),
             object_type=ObjectType.TECH,
+            email=technology.get("email", ""),
+            notification_channel=technology.get("notification_channel", "slack"),
         )
 
 
@@ -86,6 +92,8 @@ class Book:
     chapter_number: int = 0
     current_chapter: int = 0
     current_page: int = 0
+    email: str = ""
+    notification_channel: str = "slack"
 
     @staticmethod
     def to_json(book: "Book") -> dict:
@@ -101,6 +109,8 @@ class Book:
             "current_page": book.current_page,
             "channel_id": book.channel_id,
             "object_type": "book",
+            "email": book.email,
+            "notification_channel": book.notification_channel,
         }
 
     @staticmethod
@@ -117,4 +127,6 @@ class Book:
             current_page=dict.get("current_page", 0),
             channel_id=dict.get("channel_id", ""),
             object_type=ObjectType.BOOK,
+            email=dict.get("email", ""),
+            notification_channel=dict.get("notification_channel", "slack"),
         )
