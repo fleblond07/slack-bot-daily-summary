@@ -131,6 +131,122 @@ class TestSendEmail:
         assert "Content-Type: text/plain" in msg
         assert "Content-Type: text/html" in msg
 
+    def test_send_email_missing_smtp_from_email_should_raise_exception(self):
+        class MockSecretsManagerNoFromEmail:
+            def get_secret(self, key: str) -> str:
+                if key == "SMTP_FROM_EMAIL":
+                    return ""
+                secrets = {
+                    "SMTP_SERVER": "smtp.example.com",
+                    "SMTP_PORT": "587",
+                    "SMTP_USERNAME": "testuser",
+                    "SMTP_PASSWORD": "testpass",
+                }
+                return secrets.get(key, "")
+
+        src.secrets_manager._secrets_manager = MockSecretsManagerNoFromEmail()
+
+        with pytest.raises(Exception) as exception:
+            send_email(
+                recipient="test@example.com",
+                subject="Test Subject",
+                message="Test Message",
+                client=MockEmailClient(),
+            )
+        assert "SMTP_FROM_EMAIL secret not configured" in str(exception.value)
+
+    def test_send_email_missing_smtp_server_should_raise_exception(self):
+        class MockSecretsManagerNoServer:
+            def get_secret(self, key: str) -> str:
+                if key == "SMTP_SERVER":
+                    return ""
+                secrets = {
+                    "SMTP_FROM_EMAIL": "test@example.com",
+                    "SMTP_PORT": "587",
+                    "SMTP_USERNAME": "testuser",
+                    "SMTP_PASSWORD": "testpass",
+                }
+                return secrets.get(key, "")
+
+        src.secrets_manager._secrets_manager = MockSecretsManagerNoServer()
+
+        with pytest.raises(Exception) as exception:
+            send_email(
+                recipient="test@example.com",
+                subject="Test Subject",
+                message="Test Message",
+            )
+        assert "SMTP_SERVER secret not configured" in str(exception.value)
+
+    def test_send_email_missing_smtp_port_should_raise_exception(self):
+        class MockSecretsManagerNoPort:
+            def get_secret(self, key: str) -> str:
+                if key == "SMTP_PORT":
+                    return ""
+                secrets = {
+                    "SMTP_FROM_EMAIL": "test@example.com",
+                    "SMTP_SERVER": "smtp.example.com",
+                    "SMTP_USERNAME": "testuser",
+                    "SMTP_PASSWORD": "testpass",
+                }
+                return secrets.get(key, "")
+
+        src.secrets_manager._secrets_manager = MockSecretsManagerNoPort()
+
+        with pytest.raises(Exception) as exception:
+            send_email(
+                recipient="test@example.com",
+                subject="Test Subject",
+                message="Test Message",
+            )
+        assert "SMTP_PORT secret not configured" in str(exception.value)
+
+    def test_send_email_missing_smtp_username_should_raise_exception(self):
+        class MockSecretsManagerNoUsername:
+            def get_secret(self, key: str) -> str:
+                if key == "SMTP_USERNAME":
+                    return ""
+                secrets = {
+                    "SMTP_FROM_EMAIL": "test@example.com",
+                    "SMTP_SERVER": "smtp.example.com",
+                    "SMTP_PORT": "587",
+                    "SMTP_PASSWORD": "testpass",
+                }
+                return secrets.get(key, "")
+
+        src.secrets_manager._secrets_manager = MockSecretsManagerNoUsername()
+
+        with pytest.raises(Exception) as exception:
+            send_email(
+                recipient="test@example.com",
+                subject="Test Subject",
+                message="Test Message",
+            )
+        assert "SMTP_USERNAME secret not configured" in str(exception.value)
+
+    def test_send_email_missing_smtp_password_should_raise_exception(self):
+        class MockSecretsManagerNoPassword:
+            def get_secret(self, key: str) -> str:
+                if key == "SMTP_PASSWORD":
+                    return ""
+                secrets = {
+                    "SMTP_FROM_EMAIL": "test@example.com",
+                    "SMTP_SERVER": "smtp.example.com",
+                    "SMTP_PORT": "587",
+                    "SMTP_USERNAME": "testuser",
+                }
+                return secrets.get(key, "")
+
+        src.secrets_manager._secrets_manager = MockSecretsManagerNoPassword()
+
+        with pytest.raises(Exception) as exception:
+            send_email(
+                recipient="test@example.com",
+                subject="Test Subject",
+                message="Test Message",
+            )
+        assert "SMTP_PASSWORD secret not configured" in str(exception.value)
+
 
 class TestMarkdownToHtml:
     def test_empty_message_should_raise_exception(self):
