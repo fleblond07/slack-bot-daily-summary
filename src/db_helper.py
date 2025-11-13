@@ -45,13 +45,17 @@ def init_main_db():
                 type TEXT,
                 chapter_number INTEGER,
                 current_chapter INTEGER,
-                current_page INTEGER
+                current_page INTEGER,
+                email TEXT DEFAULT '',
+                notification_channel TEXT DEFAULT 'slack'
             )
         """)
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS technologies (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT UNIQUE NOT NULL
+                name TEXT UNIQUE NOT NULL,
+                email TEXT DEFAULT '',
+                notification_channel TEXT DEFAULT 'slack'
             )
         """)
         cursor.execute("""
@@ -159,8 +163,9 @@ def write_book_to_db(book: dict) -> None:
             """
             INSERT INTO books (
                 isbn, title, author, page_count, state, type,
-                chapter_number, current_chapter, current_page
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                chapter_number, current_chapter, current_page,
+                email, notification_channel
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(isbn) DO UPDATE SET
                 title = excluded.title,
                 author = excluded.author,
@@ -169,7 +174,9 @@ def write_book_to_db(book: dict) -> None:
                 type = excluded.type,
                 chapter_number = excluded.chapter_number,
                 current_chapter = excluded.current_chapter,
-                current_page = excluded.current_page
+                current_page = excluded.current_page,
+                email = excluded.email,
+                notification_channel = excluded.notification_channel
             """,
             (
                 book.get("isbn"),
@@ -181,6 +188,8 @@ def write_book_to_db(book: dict) -> None:
                 book.get("chapter_number"),
                 book.get("current_chapter"),
                 book.get("current_page"),
+                book.get("email", ""),
+                book.get("notification_channel", "slack"),
             ),
         )
 
@@ -218,11 +227,17 @@ def write_technology_to_db(technology: dict) -> None:
 
         cursor.execute(
             """
-            INSERT INTO technologies (name)
-            VALUES (?)
-            ON CONFLICT(name) DO NOTHING
+            INSERT INTO technologies (name, email, notification_channel)
+            VALUES (?, ?, ?)
+            ON CONFLICT(name) DO UPDATE SET
+                email = excluded.email,
+                notification_channel = excluded.notification_channel
             """,
-            (technology.get("name"),),
+            (
+                technology.get("name"),
+                technology.get("email", ""),
+                technology.get("notification_channel", "slack"),
+            ),
         )
 
         cursor.execute(

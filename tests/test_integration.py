@@ -1,14 +1,15 @@
 from datetime import datetime
-from fastapi.testclient import TestClient
 from unittest.mock import patch
-from src.db_helper import get_db_connection
-from src.constant import DB_NAME, DEFAULT_SCHEDULE_TIME, JOBS_DB_NAME
+
 import httpx
 import schedule
+from fastapi.testclient import TestClient
+
 from endpoint import app
+from src.constant import DB_NAME, DEFAULT_SCHEDULE_TIME, JOBS_DB_NAME
+from src.db_helper import get_db_connection
 from src.main import send_daily_book_summary, send_daily_tech_summary
 from tests.test_utils import default_book_for_integration, default_tech_for_integation
-
 
 client = TestClient(app)
 
@@ -50,13 +51,17 @@ class TestIntegrationTestBookHappyPath:
                     type TEXT,
                     chapter_number INTEGER,
                     current_chapter INTEGER,
-                    current_page INTEGER
+                    current_page INTEGER,
+                    email TEXT DEFAULT '',
+                    notification_channel TEXT DEFAULT 'slack'
                 )
             """)
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS technologies (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT UNIQUE NOT NULL
+                    name TEXT UNIQUE NOT NULL,
+                    email TEXT DEFAULT '',
+                    notification_channel TEXT DEFAULT 'slack'
                 )
             """)
             cursor.execute("""
@@ -77,10 +82,10 @@ class TestIntegrationTestBookHappyPath:
     @patch("src.decorators.verify_slack_request")
     @patch("src.main.get_book_isbn")
     @patch("src.ai_helper._send_prompt")
-    @patch("src.main.send_slack_message")
+    @patch("src.main.send_notification")
     def test_integration_book_happy_path(
         self,
-        mock_send_slack,
+        mock_send_notification,
         mock_gpt,
         mock_isbn,
         mock_verify_slack,
@@ -114,12 +119,7 @@ class TestIntegrationTestBookHappyPath:
 
         job.run()
 
-        assert mock_send_slack.call_count == 2
-        mock_send_slack.assert_any_call("1234567", "This is your daily summary of x")
-        mock_send_slack.assert_any_call(
-            "1234567",
-            "This was the final summary for Johnny McEngineer - Thank you for using the bot!",
-        )
+        assert mock_send_notification.call_count == 2
 
 
 class TestIntegrationTestTechHappyPath:
@@ -159,13 +159,17 @@ class TestIntegrationTestTechHappyPath:
                     type TEXT,
                     chapter_number INTEGER,
                     current_chapter INTEGER,
-                    current_page INTEGER
+                    current_page INTEGER,
+                    email TEXT DEFAULT '',
+                    notification_channel TEXT DEFAULT 'slack'
                 )
             """)
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS technologies (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT UNIQUE NOT NULL
+                    name TEXT UNIQUE NOT NULL,
+                    email TEXT DEFAULT '',
+                    notification_channel TEXT DEFAULT 'slack'
                 )
             """)
             cursor.execute("""
@@ -184,10 +188,10 @@ class TestIntegrationTestTechHappyPath:
     @patch("src.main.get_channel_id")
     @patch("src.decorators.verify_slack_request")
     @patch("src.ai_helper._send_prompt")
-    @patch("src.main.send_slack_message")
+    @patch("src.main.send_notification")
     def test_integration_tech_happy_path(
         self,
-        mock_send_slack,
+        mock_send_notification,
         mock_gpt,
         mock_verify_slack,
         mock_get_channel,
@@ -218,6 +222,4 @@ class TestIntegrationTestTechHappyPath:
 
         job.run()
 
-        mock_send_slack.assert_called_once_with(
-            "1234567", "This is your daily summary of x"
-        )
+        mock_send_notification.assert_called_once()

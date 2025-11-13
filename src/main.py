@@ -1,6 +1,14 @@
+import logging
+
 import schedule
 from starlette.datastructures import UploadFile
-from src.schedule_helper import schedule_jobs, run_all_jobs, cancel_job_by_isbn
+
+from src.ai_helper import (
+    get_summary_for_book_by_chapter,
+    get_summary_for_book_by_page,
+    get_summary_for_technology,
+)
+from src.constant import DEFAULT_PAGES_SPLIT
 from src.db_helper import (
     load_book_by_isbn,
     load_books,
@@ -10,16 +18,11 @@ from src.db_helper import (
     write_book_to_db,
     write_technology_to_db,
 )
-from src.ai_helper import (
-    get_summary_for_book_by_chapter,
-    get_summary_for_book_by_page,
-    get_summary_for_technology,
-)
-from src.domain import Book, ObjectType, State, Technology, Type, Channel
-from src.slack_helper import send_slack_message, get_channel_id
+from src.domain import Book, Channel, ObjectType, State, Technology, Type
 from src.external_helper import get_book_information, get_book_isbn
-from src.constant import DEFAULT_PAGES_SPLIT
-import logging
+from src.notification_helper import NotificationChannel, send_notification
+from src.schedule_helper import cancel_job_by_isbn, run_all_jobs, schedule_jobs
+from src.slack_helper import get_channel_id
 
 logger = logging.getLogger("daily_learner")
 
@@ -47,10 +50,18 @@ def send_daily_book_summary(book: Book) -> None:
         raise Exception(f"An error occurred getting the summary for book {book.title}")
 
     logger.info(
-        f"Sending slack message that contains summary... on channel {book.channel_id}"
+        f"Sending notification that contains summary... via {book.notification_channel}"
     )
 
-    send_slack_message(book.channel_id, summary)
+    notification_channel = NotificationChannel(book.notification_channel)
+
+    send_notification(
+        channel_id=book.channel_id,
+        email=book.email,
+        subject=f"Daily Summary: {book.title}",
+        message=summary,
+        notification_channel=notification_channel,
+    )
 
     if book.type == Type.BY_CHAPTER:
         logger.info("Update current chapter number and status")
@@ -60,9 +71,15 @@ def send_daily_book_summary(book: Book) -> None:
             book.state = State.FINISHED
             message = f"This was the final summary for {book.title} - Thank you for using the bot!"
             logger.info(
-                f"Sending last message for {book.title} on channel {book.channel_id}"
+                f"Sending last message for {book.title} via {book.notification_channel}"
             )
-            send_slack_message(book.channel_id, message)
+            send_notification(
+                channel_id=book.channel_id,
+                email=book.email,
+                subject=f"Final Summary: {book.title}",
+                message=message,
+                notification_channel=notification_channel,
+            )
 
             cancel_job_by_isbn(book.isbn)
     else:
@@ -75,9 +92,15 @@ def send_daily_book_summary(book: Book) -> None:
             book.state = State.FINISHED
             message = f"This was the final summary for {book.title} - Thank you for using the bot!"
             logger.info(
-                f"Sending last message for {book.title} on channel {book.channel_id}"
+                f"Sending last message for {book.title} via {book.notification_channel}"
             )
-            send_slack_message(book.channel_id, message)
+            send_notification(
+                channel_id=book.channel_id,
+                email=book.email,
+                subject=f"Final Summary: {book.title}",
+                message=message,
+                notification_channel=notification_channel,
+            )
 
             cancel_job_by_isbn(book.isbn)
 
@@ -97,10 +120,18 @@ def send_daily_tech_summary(technology: Technology) -> None:
         )
 
     logger.info(
-        f"Sending tips for {technology.name} on channel {technology.channel_id}"
+        f"Sending tips for {technology.name} via {technology.notification_channel}"
     )
 
-    send_slack_message(technology.channel_id, summary)
+    notification_channel = NotificationChannel(technology.notification_channel)
+
+    send_notification(
+        channel_id=technology.channel_id,
+        email=technology.email,
+        subject=f"Daily Tips: {technology.name}",
+        message=summary,
+        notification_channel=notification_channel,
+    )
 
 
 def _get_pages_for_summary(book: Book) -> int:
