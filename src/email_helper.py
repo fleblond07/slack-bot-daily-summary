@@ -26,11 +26,9 @@ def send_email(
 ) -> bool:
     try:
         if not recipient or not subject or not message:
-            raise Exception(
-                f"Missing required arguments: {recipient=},{subject=},{bool(message)=}"
-            )
+            raise Exception(f"Missing required arguments: {subject=},{bool(message)=}")
 
-        logger.info(f"Sending email to {recipient=}")
+        logger.info("Sending email to <REDACTED>")
 
         from_email = get_secret("SMTP_FROM_EMAIL")
         if not from_email:
