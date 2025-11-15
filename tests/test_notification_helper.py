@@ -76,36 +76,33 @@ class TestSendNotification:
             )
         assert "email is required" in str(exception.value)
 
-    def test_send_notification_slack_failure_returns_false(self):
+    def test_send_notification_slack_failure_raise_exception(self):
         with patch("src.notification_helper.send_slack_message") as mock_slack:
             mock_slack.side_effect = Exception("Slack error")
+            with pytest.raises(Exception):
+                send_notification(
+                    channel_id="123456",
+                    email=None,
+                    subject="Test Subject",
+                    message="Test Message",
+                    notification_channel=NotificationChannel.SLACK,
+                    slack_client=TestClient(),
+                )
 
-            result = send_notification(
-                channel_id="123456",
-                email=None,
-                subject="Test Subject",
-                message="Test Message",
-                notification_channel=NotificationChannel.SLACK,
-                slack_client=TestClient(),
-            )
-
-            assert result is False
-
-    def test_send_notification_email_failure_returns_false(self):
+    def test_send_notification_email_failure_raise_exception(self):
         with patch("src.notification_helper.send_email") as mock_email:
             mock_email.side_effect = Exception("Email error")
             mock_email_client = MockEmailClient()
 
-            result = send_notification(
-                channel_id=None,
-                email="test@example.com",
-                subject="Test Subject",
-                message="Test Message",
-                notification_channel=NotificationChannel.EMAIL,
-                email_client=mock_email_client,
-            )
-
-            assert result is False
+            with pytest.raises(Exception):
+                send_notification(
+                    channel_id=None,
+                    email="test@example.com",
+                    subject="Test Subject",
+                    message="Test Message",
+                    notification_channel=NotificationChannel.EMAIL,
+                    email_client=mock_email_client,
+                )
 
     def test_send_notification_defaults_to_slack(self):
         with patch("src.notification_helper.send_slack_message") as mock_slack:

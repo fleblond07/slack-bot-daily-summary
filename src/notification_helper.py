@@ -43,6 +43,7 @@ def send_notification(
             return True
         except Exception as e:
             logger.error(f"Failed to send Slack notification: {e}")
+            raise
 
     if notification_channel is NotificationChannel.EMAIL:
         if not email:
@@ -56,5 +57,4 @@ def send_notification(
             return True
         except Exception as e:
             logger.error(f"Failed to send email notification: {e}")
-
-    return False
+            raise
