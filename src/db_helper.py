@@ -1,18 +1,20 @@
-import sqlite3
-from contextlib import contextmanager
-from src.schedule_helper import schedule_jobs
-from src.domain import Book, ObjectType, Technology
-from src.constant import DB_NAME, JOBS_DB_NAME
-import schedule
 import logging
+from contextlib import contextmanager
+
+import psycopg2
+import psycopg2.extras
+import schedule
+
+from src.constant import get_database_url
+from src.domain import Book, ObjectType, Technology
+from src.schedule_helper import schedule_jobs
 
 logger = logging.getLogger("daily_learner")
 
 
 @contextmanager
-def get_db_connection(db_path: str):
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
+def get_db_connection():
+    conn = psycopg2.connect(get_database_url())
     try:
         yield conn
         conn.commit()
@@ -24,11 +26,11 @@ def get_db_connection(db_path: str):
 
 
 def init_main_db():
-    with get_db_connection(DB_NAME) as conn:
+    with get_db_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS items (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 object_type TEXT NOT NULL,
                 object_id INTEGER NOT NULL,
                 UNIQUE(object_type, object_id)
@@ -36,7 +38,7 @@ def init_main_db():
         """)
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS books (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 isbn TEXT UNIQUE NOT NULL,
                 title TEXT,
                 author TEXT,
@@ -52,7 +54,7 @@ def init_main_db():
         """)
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS technologies (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 name TEXT UNIQUE NOT NULL,
                 email TEXT DEFAULT '',
                 notification_channel TEXT DEFAULT 'slack'
@@ -67,25 +69,26 @@ def init_main_db():
 
 
 def init_jobs_db():
-    with get_db_connection(JOBS_DB_NAME) as conn:
+    with get_db_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS jobs (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 isbn TEXT,
                 name TEXT
             )
         """)
 
 
-init_main_db()
-init_jobs_db()
+def init_db():
+    init_main_db()
+    init_jobs_db()
 
 
 def load_books() -> list[Book]:
     logger.info("Loading all books from database")
-    with get_db_connection(DB_NAME) as conn:
-        cursor = conn.cursor()
+    with get_db_connection() as conn:
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cursor.execute(
             """
             SELECT b.*, c.channel_id
@@ -104,8 +107,8 @@ def load_books() -> list[Book]:
 
 def load_technologies() -> list[Technology]:
     logger.info("Loading all technologies from database")
-    with get_db_connection(DB_NAME) as conn:
-        cursor = conn.cursor()
+    with get_db_connection() as conn:
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cursor.execute(
             """
             SELECT t.*, c.channel_id
@@ -128,14 +131,14 @@ def load_book_by_isbn(isbn: str) -> Book | None:
 
     logger.info(f"Loading book by {isbn=}")
 
-    with get_db_connection(DB_NAME) as conn:
-        cursor = conn.cursor()
+    with get_db_connection() as conn:
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cursor.execute(
             """
             SELECT b.*, c.channel_id
             FROM books b
             LEFT JOIN channels c ON c.object_id = b.id
-            WHERE b.isbn = ?
+            WHERE b.isbn = %s
         """,
             (isbn,),
         )
@@ -156,7 +159,7 @@ def write_book_to_db(book: dict) -> None:
 
     logger.info(f"Writing book {book.get('title', 'Unknown')} to database")
 
-    with get_db_connection(DB_NAME) as conn:
+    with get_db_connection() as conn:
         cursor = conn.cursor()
 
         cursor.execute(
@@ -165,7 +168,7 @@ def write_book_to_db(book: dict) -> None:
                 isbn, title, author, page_count, state, type,
                 chapter_number, current_chapter, current_page,
                 email, notification_channel
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT(isbn) DO UPDATE SET
                 title = excluded.title,
                 author = excluded.author,
@@ -193,12 +196,12 @@ def write_book_to_db(book: dict) -> None:
             ),
         )
 
-        cursor.execute("SELECT id FROM books WHERE isbn = ?", (book.get("isbn"),))
+        cursor.execute("SELECT id FROM books WHERE isbn = %s", (book.get("isbn"),))
         book_id = cursor.fetchone()[0]
         cursor.execute(
             """
             INSERT INTO items (object_type, object_id)
-            VALUES (?, ?)
+            VALUES (%s, %s)
             ON CONFLICT(object_type, object_id) DO NOTHING
             """,
             (ObjectType.BOOK.value, book_id),
@@ -208,7 +211,7 @@ def write_book_to_db(book: dict) -> None:
             cursor.execute(
                 """
                 INSERT INTO channels (channel_id, object_id)
-                VALUES (?, ?)
+                VALUES (%s, %s)
                 ON CONFLICT(object_id) DO UPDATE SET
                     channel_id = excluded.channel_id
                 """,
@@ -222,13 +225,13 @@ def write_technology_to_db(technology: dict) -> None:
 
     logger.info(f"Writing technology {technology.get('name', 'Unknown')}")
 
-    with get_db_connection(DB_NAME) as conn:
+    with get_db_connection() as conn:
         cursor = conn.cursor()
 
         cursor.execute(
             """
             INSERT INTO technologies (name, email, notification_channel)
-            VALUES (?, ?, ?)
+            VALUES (%s, %s, %s)
             ON CONFLICT(name) DO UPDATE SET
                 email = excluded.email,
                 notification_channel = excluded.notification_channel
@@ -241,13 +244,13 @@ def write_technology_to_db(technology: dict) -> None:
         )
 
         cursor.execute(
-            "SELECT id FROM technologies WHERE name = ?", (technology.get("name"),)
+            "SELECT id FROM technologies WHERE name = %s", (technology.get("name"),)
         )
         tech_id = cursor.fetchone()[0]
         cursor.execute(
             """
             INSERT INTO items (object_type, object_id)
-            VALUES (?, ?)
+            VALUES (%s, %s)
             ON CONFLICT(object_type, object_id) DO NOTHING
             """,
             (ObjectType.TECH.value, tech_id),
@@ -257,7 +260,7 @@ def write_technology_to_db(technology: dict) -> None:
             cursor.execute(
                 """
                 INSERT INTO channels (channel_id, object_id)
-                VALUES (?, ?)
+                VALUES (%s, %s)
                 ON CONFLICT(object_id) DO UPDATE SET
                     channel_id = excluded.channel_id
                 """,
@@ -271,14 +274,14 @@ def load_technology_by_name(technology_name: str) -> Technology | None:
 
     logger.info(f"Loading technology by {technology_name=}")
 
-    with get_db_connection(DB_NAME) as conn:
-        cursor = conn.cursor()
+    with get_db_connection() as conn:
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cursor.execute(
             """
             SELECT t.*, c.channel_id
             FROM technologies t
             LEFT JOIN channels c ON c.object_id = t.id
-            WHERE t.name = ?
+            WHERE t.name = %s
         """,
             (technology_name,),
         )
@@ -295,8 +298,8 @@ def load_technology_by_name(technology_name: str) -> Technology | None:
 
 def load_jobs() -> None:
     logger.info("Loading jobs from database")
-    with get_db_connection(JOBS_DB_NAME) as conn:
-        cursor = conn.cursor()
+    with get_db_connection() as conn:
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cursor.execute("SELECT * FROM jobs")
         jobs = cursor.fetchall()
 
@@ -312,23 +315,23 @@ def load_jobs() -> None:
 
 def save_jobs() -> None:
     logger.info("Saving jobs to database")
-    with get_db_connection(JOBS_DB_NAME) as conn:
+    with get_db_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("DELETE FROM jobs")
 
         for job in schedule.jobs:
             if isbn := getattr(job.job_func.args[0], "isbn", None):  # type: ignore[attr-defined]
                 logger.info(f"Saving book {isbn=} job to database")
-                cursor.execute("INSERT INTO jobs (isbn) VALUES (?)", (isbn,))
+                cursor.execute("INSERT INTO jobs (isbn) VALUES (%s)", (isbn,))
             elif name := getattr(job.job_func.args[0], "name", None):  # type: ignore[attr-defined]
                 logger.info(f"Saving technology {name=} job to database")
-                cursor.execute("INSERT INTO jobs (name) VALUES (?)", (name,))
+                cursor.execute("INSERT INTO jobs (name) VALUES (%s)", (name,))
 
 
 def reset_jobs() -> None:
     logger.info("Clearing schedule...")
     schedule.clear()
     logger.info("Clearing jobs DB")
-    with get_db_connection(JOBS_DB_NAME) as conn:
+    with get_db_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("DELETE FROM jobs")

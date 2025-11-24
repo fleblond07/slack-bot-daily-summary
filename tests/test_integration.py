@@ -6,8 +6,7 @@ import schedule
 from fastapi.testclient import TestClient
 
 from endpoint import app
-from src.constant import DB_NAME, DEFAULT_SCHEDULE_TIME, JOBS_DB_NAME
-from src.db_helper import get_db_connection
+from src.constant import DEFAULT_SCHEDULE_TIME
 from src.main import send_daily_book_summary, send_daily_tech_summary
 from tests.test_utils import default_book_for_integration, default_tech_for_integation
 
@@ -16,65 +15,6 @@ client = TestClient(app)
 
 class TestIntegrationTestBookHappyPath:
     def setup_method(self):
-        self.jobs_db_name = JOBS_DB_NAME
-        self.db_name = DB_NAME
-
-        with get_db_connection(self.jobs_db_name) as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS jobs (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    isbn TEXT,
-                    name TEXT
-                )
-            """)
-            cursor.execute("DELETE FROM jobs WHERE 1=1")
-
-        with get_db_connection(self.db_name) as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS items (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    object_type TEXT NOT NULL,
-                    object_id INTEGER NOT NULL,
-                    UNIQUE(object_type, object_id)
-                )
-            """)
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS books (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    isbn TEXT UNIQUE NOT NULL,
-                    title TEXT,
-                    author TEXT,
-                    page_count INTEGER,
-                    state TEXT,
-                    type TEXT,
-                    chapter_number INTEGER,
-                    current_chapter INTEGER,
-                    current_page INTEGER,
-                    email TEXT DEFAULT '',
-                    notification_channel TEXT DEFAULT 'slack'
-                )
-            """)
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS technologies (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT UNIQUE NOT NULL,
-                    email TEXT DEFAULT '',
-                    notification_channel TEXT DEFAULT 'slack'
-                )
-            """)
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS channels (
-                    channel_id TEXT NOT NULL,
-                    object_id INTEGER UNIQUE NOT NULL
-                )
-            """)
-            cursor.execute("DELETE FROM channels WHERE 1=1")
-            cursor.execute("DELETE FROM items WHERE 1=1")
-            cursor.execute("DELETE FROM books WHERE 1=1")
-            cursor.execute("DELETE FROM technologies WHERE 1=1")
-
         schedule.clear()
 
     @patch("src.main.get_channel_id")
@@ -124,65 +64,6 @@ class TestIntegrationTestBookHappyPath:
 
 class TestIntegrationTestTechHappyPath:
     def setup_method(self):
-        self.jobs_db_name = JOBS_DB_NAME
-        self.db_name = DB_NAME
-
-        with get_db_connection(self.jobs_db_name) as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS jobs (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    isbn TEXT,
-                    name TEXT
-                )
-            """)
-            cursor.execute("DELETE FROM jobs WHERE 1=1")
-
-        with get_db_connection(self.db_name) as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS items (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    object_type TEXT NOT NULL,
-                    object_id INTEGER NOT NULL,
-                    UNIQUE(object_type, object_id)
-                )
-            """)
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS books (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    isbn TEXT UNIQUE NOT NULL,
-                    title TEXT,
-                    author TEXT,
-                    page_count INTEGER,
-                    state TEXT,
-                    type TEXT,
-                    chapter_number INTEGER,
-                    current_chapter INTEGER,
-                    current_page INTEGER,
-                    email TEXT DEFAULT '',
-                    notification_channel TEXT DEFAULT 'slack'
-                )
-            """)
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS technologies (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT UNIQUE NOT NULL,
-                    email TEXT DEFAULT '',
-                    notification_channel TEXT DEFAULT 'slack'
-                )
-            """)
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS channels (
-                    channel_id TEXT NOT NULL,
-                    object_id INTEGER UNIQUE NOT NULL
-                )
-            """)
-            cursor.execute("DELETE FROM channels WHERE 1=1")
-            cursor.execute("DELETE FROM items WHERE 1=1")
-            cursor.execute("DELETE FROM books WHERE 1=1")
-            cursor.execute("DELETE FROM technologies WHERE 1=1")
-
         schedule.clear()
 
     @patch("src.main.get_channel_id")

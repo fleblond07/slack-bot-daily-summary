@@ -5,7 +5,7 @@ import schedule
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from src.secrets_manager import SecretsManager, get_log_level
-from src.db_helper import load_jobs, reset_jobs
+from src.db_helper import init_db, load_jobs, reset_jobs
 from src.main import (
     handle_list_command,
     handle_readme_command,
@@ -46,6 +46,8 @@ logger = logging.getLogger("daily_learner")
 
 
 async def scheduler_loop():
+    logger.info("Initializing database...")
+    init_db()
     logger.info("Loading jobs...")
     load_jobs()
     while True:

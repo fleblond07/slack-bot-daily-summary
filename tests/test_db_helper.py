@@ -1,5 +1,9 @@
-from src.main import send_daily_book_summary, send_daily_tech_summary
+import psycopg2.extras
+import pytest
+import schedule
+
 from src.db_helper import (
+    get_db_connection,
     load_book_by_isbn,
     load_books,
     load_jobs,
@@ -8,24 +12,20 @@ from src.db_helper import (
     save_jobs,
     write_book_to_db,
     write_technology_to_db,
-    get_db_connection,
 )
-from src.constant import DB_NAME, JOBS_DB_NAME
+from src.main import send_daily_book_summary, send_daily_tech_summary
 from tests.test_utils import (
+    default_book_per_page,
     default_dict_from_json,
     default_technology,
     default_technology_from_json,
-    second_technology_from_json,
     second_book_json,
-    default_book_per_page,
+    second_technology_from_json,
 )
-import pytest
-import schedule
 
 
 class TestLoadBooks:
     def setup_method(self):
-        self.db_name = DB_NAME
         write_book_to_db(default_dict_from_json)
 
     def test_open_default_book(self):
@@ -34,7 +34,6 @@ class TestLoadBooks:
 
 class TestLoadBookByISBN:
     def setup_method(self):
-        self.db_name = DB_NAME
         write_book_to_db(default_dict_from_json)
 
     def test_get_specific_book(self):
@@ -54,7 +53,6 @@ class TestLoadBookByISBN:
 
 class TestLoadTechnologyByName:
     def setup_method(self):
-        self.db_name = DB_NAME
         write_technology_to_db(default_technology_from_json)
 
     def test_get_specific_technology(self):
@@ -74,7 +72,6 @@ class TestLoadTechnologyByName:
 
 class TestWriteBookToJSON:
     def setup_method(self):
-        self.db_name = DB_NAME
         write_book_to_db(default_dict_from_json)
 
     def test_write_empty_book_to_json_should_raise_exception(self):
@@ -90,10 +87,10 @@ class TestWriteBookToJSON:
             for k, v in second_book_json.items()
             if k not in ("object_type", "channel_id")
         }
-        with get_db_connection(self.db_name) as conn:
-            cursor = conn.cursor()
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
             cursor.execute(
-                "SELECT * FROM books WHERE isbn = ?", (second_book_json.get("isbn"),)
+                "SELECT * FROM books WHERE isbn = %s", (second_book_json.get("isbn"),)
             )
             row = cursor.fetchone()
             result = dict(row)
@@ -110,10 +107,10 @@ class TestWriteBookToJSON:
             for k, v in updated_dict.items()
             if k not in ("object_type", "channel_id")
         }
-        with get_db_connection(self.db_name) as conn:
-            cursor = conn.cursor()
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
             cursor.execute(
-                "SELECT * FROM books WHERE isbn = ?", (updated_dict.get("isbn"),)
+                "SELECT * FROM books WHERE isbn = %s", (updated_dict.get("isbn"),)
             )
             row = cursor.fetchone()
             result = dict(row)
@@ -123,7 +120,6 @@ class TestWriteBookToJSON:
 
 class TestWriteTechnologyToJSON:
     def setup_method(self):
-        self.db_name = DB_NAME
         write_technology_to_db(default_technology_from_json)
 
     def test_write_empty_book_to_json_should_raise_exception(self):
@@ -139,10 +135,10 @@ class TestWriteTechnologyToJSON:
             for k, v in second_technology_from_json.items()
             if k not in ("object_type", "channel_id")
         }
-        with get_db_connection(self.db_name) as conn:
-            cursor = conn.cursor()
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
             cursor.execute(
-                "SELECT * FROM technologies WHERE name = ?",
+                "SELECT * FROM technologies WHERE name = %s",
                 (second_technology_from_json.get("name"),),
             )
             row = cursor.fetchone()
@@ -160,10 +156,11 @@ class TestWriteTechnologyToJSON:
             for k, v in updated_dict.items()
             if k not in ("object_type", "channel_id")
         }
-        with get_db_connection(self.db_name) as conn:
-            cursor = conn.cursor()
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
             cursor.execute(
-                "SELECT * FROM technologies WHERE name = ?", (updated_dict.get("name"),)
+                "SELECT * FROM technologies WHERE name = %s",
+                (updated_dict.get("name"),),
             )
             row = cursor.fetchone()
             result = dict(row)
@@ -173,12 +170,34 @@ class TestWriteTechnologyToJSON:
 
 class TestLoadJobs:
     def setup_method(self):
-        self.db_name = JOBS_DB_NAME
-        with get_db_connection(self.db_name) as conn:
+        test_book = {
+            "isbn": "49837410934324",
+            "title": "Test Book",
+            "author": "Test Author",
+            "page_count": 100,
+            "state": "on_going",
+            "type": "by_page",
+            "chapter_number": 10,
+            "current_chapter": 1,
+            "current_page": 0,
+            "email": "",
+            "notification_channel": "slack",
+        }
+
+        test_tech = {
+            "name": "SQLAlchemy",
+            "email": "",
+            "notification_channel": "slack",
+        }
+
+        write_book_to_db(test_book)
+        write_technology_to_db(test_tech)
+
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("DELETE FROM jobs")
-            cursor.execute("INSERT INTO jobs (isbn) VALUES (?)", ("49837410934324",))
-            cursor.execute("INSERT INTO jobs (name) VALUES (?)", ("SQLAlchemy",))
+            cursor.execute("INSERT INTO jobs (isbn) VALUES (%s)", ("49837410934324",))
+            cursor.execute("INSERT INTO jobs (name) VALUES (%s)", ("SQLAlchemy",))
 
     def test_loads_jobs_into_schedule(self):
         schedule.clear()
@@ -196,16 +215,13 @@ class TestSaveJobs:
     def _test_job(self) -> None:
         pass
 
-    def setup_method(self):
-        self.db_name = JOBS_DB_NAME
-
     def test_saves_book_jobs_from_schedule(self):
         schedule.clear()
         schedule.every(1).seconds.do(send_daily_book_summary, default_book_per_page)
 
         save_jobs()
-        with get_db_connection(self.db_name) as conn:
-            cursor = conn.cursor()
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
             cursor.execute("SELECT * FROM jobs")
             jobs = cursor.fetchall()
             inserted_job = dict(jobs[0])
@@ -216,8 +232,8 @@ class TestSaveJobs:
         schedule.every(1).seconds.do(send_daily_tech_summary, default_technology)
 
         save_jobs()
-        with get_db_connection(self.db_name) as conn:
-            cursor = conn.cursor()
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
             cursor.execute("SELECT * FROM jobs")
             jobs = cursor.fetchall()
             inserted_job = dict(jobs[0])
@@ -228,9 +244,6 @@ class TestResetJobs:
     def _test_job(self) -> None:
         pass
 
-    def setup_method(self):
-        self.db_name = JOBS_DB_NAME
-
     def test_resets_jobs_and_db(self):
         schedule.clear()
         schedule.every(1).seconds.do(self._test_job, "world")
@@ -238,7 +251,7 @@ class TestResetJobs:
 
         reset_jobs()
         assert len(schedule.jobs) == 0
-        with get_db_connection(self.db_name) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM jobs")
             jobs = cursor.fetchall()
@@ -246,15 +259,12 @@ class TestResetJobs:
 
 
 class TestDatabaseExceptionHandling:
-    def setup_method(self):
-        self.db_name = DB_NAME
-
     def test_database_exception_triggers_rollback(self):
         with pytest.raises(Exception):
-            with get_db_connection(self.db_name) as conn:
+            with get_db_connection() as conn:
                 cursor = conn.cursor()
                 cursor.execute(
-                    "INSERT INTO books (isbn, title, author, page_count, state, type) VALUES (?, ?, ?, ?, ?, ?)",
+                    "INSERT INTO books (isbn, title, author, page_count, state, type) VALUES (%s, %s, %s, %s, %s, %s)",
                     (
                         "unique-isbn-123",
                         "Test Book",
@@ -265,7 +275,7 @@ class TestDatabaseExceptionHandling:
                     ),
                 )
                 cursor.execute(
-                    "INSERT INTO books (isbn, title, author, page_count, state, type) VALUES (?, ?, ?, ?, ?, ?)",
+                    "INSERT INTO books (isbn, title, author, page_count, state, type) VALUES (%s, %s, %s, %s, %s, %s)",
                     (
                         "unique-isbn-123",
                         "Another Book",
@@ -275,8 +285,8 @@ class TestDatabaseExceptionHandling:
                         "by_page",
                     ),
                 )
-        with get_db_connection(self.db_name) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM books WHERE isbn = ?", ("unique-isbn-123",))
+            cursor.execute("SELECT * FROM books WHERE isbn = %s", ("unique-isbn-123",))
             result = cursor.fetchone()
             assert result is None
