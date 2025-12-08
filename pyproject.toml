@@ -27,7 +27,7 @@ dev = [
     "ty==0.0.1a32",
     "responses==0.25.8",
     "pytest-cov==7.0.0",
-    "pytest==9.0.1",
+    "pytest==9.0.2",
 ]
 
 [tool.ty.src]
