@@ -16,7 +16,7 @@
     "@sveltejs/vite-plugin-svelte": "6.2.1",
     "@testing-library/svelte": "5.2.9",
     "@vitest/ui": "4.0.15",
-    "eslint": "9.39.1",
+    "eslint": "9.39.2",
     "eslint-plugin-svelte": "3.13.1",
     "globals": "16.5.0",
     "jsdom": "27.3.0",
