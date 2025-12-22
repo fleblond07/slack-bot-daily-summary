@@ -14,7 +14,7 @@
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "6.2.1",
-    "@testing-library/svelte": "5.2.9",
+    "@testing-library/svelte": "5.2.10",
     "@vitest/ui": "4.0.15",
     "eslint": "9.39.2",
     "eslint-plugin-svelte": "3.13.1",
