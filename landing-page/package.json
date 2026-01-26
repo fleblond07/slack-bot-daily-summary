@@ -18,7 +18,7 @@
     "@vitest/ui": "4.0.17",
     "eslint": "9.39.2",
     "eslint-plugin-svelte": "3.14.0",
-    "globals": "17.0.0",
+    "globals": "17.1.0",
     "jsdom": "27.4.0",
     "svelte": "5.48.2",
     "vite": "7.3.1",
