@@ -8,3 +8,9 @@ updates:
     directory: "/landing-page"
     schedule:
       interval: "weekly"
+    groups:
+       vite-stack:
+          patterns:
+             - "vite"
+             - "vitest"
+             - "@vitest/*"
